@@ -15,12 +15,7 @@ typedef struct line{
 	double c;
 } Line; // https://brilliant.org/wiki/dot-product-distance-between-point-and-a-line/
 
-typedef struct set_of_points{
-	Point * points_array;
-	int num_points;
-} Set_of_Points;
-
-Set_of_Points * sub_hull(Set_of_Points all_points, Point p1, Point p2);
+void quick_hull_new(std::vector<Point *> &input_points, std::list<Point *> &convex_hull);
 void sub_hull_new(std::vector<Point *> &input_points, Point* p1, Point* p2, std::list<Point *> &convex_hull);
 
 #endif
