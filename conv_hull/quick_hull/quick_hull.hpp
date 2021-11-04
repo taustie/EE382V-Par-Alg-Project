@@ -2,8 +2,8 @@
 #define QUICK_HULL
 
 typedef struct point{
-	double x;
-	double y;
+	long long int x;
+	long long int y;
 } Point;
 
 typedef Point Vector;

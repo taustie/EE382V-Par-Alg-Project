@@ -40,6 +40,7 @@ Vector form_zero_vector(Point p1, Point p2){
 bool cross_prod_orientation(Vector v1, Vector v2){
 	double result = v1.x * v2.y - v1.y * v2.x;
 	if(result > 0){ // assumes colinear points are not distinct on convex hull
+		// std::cout << "result =  " << result  << std::endl;
 		return true;
 	}
 	else{
@@ -61,11 +62,23 @@ void quick_hull_new(std::vector<Point *> &input_points, std::list<Point *> &conv
 	Point* min_point = input_points.at(0);
 	Point* max_point = input_points.at(0);
 	for(std::vector<Point *>::iterator it = input_points.begin(); it != input_points.end(); ++it){
-		if(min_point->y > (*it)->y){
+		// because colinear points are not added to the convex hull must choose min and max more carefully
+		if(min_point->y > (*it)->y){ // min y point such that x is also minimal
 			min_point = *it;
 		}
-		if(max_point->y < (*it)->y){
+		else if(min_point->y == (*it)->y){
+			if(min_point->x > (*it)->x){
+				min_point = *it;
+			}
+		}
+
+		if(max_point->y < (*it)->y){ // max y point such that x is also maximal
 			max_point = *it;
+		}
+		else if(max_point->y == (*it)->y){
+			if(max_point->x < (*it)->x){
+				max_point = *it;
+			}
 		}
 	}
 
@@ -83,6 +96,7 @@ void sub_hull_new(std::vector<Point *> &input_points, Point* p1, Point* p2, std:
 	for(std::vector<Point *>::iterator it = input_points.begin(); it != input_points.end(); ++it){
 		Vector test_vector = form_zero_vector(*p2, **it);
         if (cross_prod_orientation(ref_vector, test_vector)) {
+			// std::cout << "Adding point: (" << (*it)->x << "," << (*it)->y << ")" << std::endl;
 			left_points.push_back(*it);
         }
 	}
@@ -129,7 +143,9 @@ bool compare_angles (Point * first, Point * second){
 		first_angle = M_PI/2;
 	}
 	else{
-		first_angle = atan(first_vector.y / first_vector.x);
+		first_angle = (float) first_vector.y / (float) first_vector.x;
+		// std::cout << "first_angle = " << first_angle << std::endl;
+		first_angle = atan(first_angle);
 		if(first_angle < 0){
 			first_angle = M_PI + first_angle;
 		}
@@ -141,7 +157,9 @@ bool compare_angles (Point * first, Point * second){
 		second_angle = M_PI/2;
 	}
 	else{
-		second_angle = atan(second_vector.y / second_vector.x);
+		second_angle = (float) second_vector.y / (float) second_vector.x;
+		// std::cout << "second_angle = " << second_angle << std::endl;
+		second_angle = atan(second_angle);
 		if(second_angle < 0){
 			second_angle = M_PI + second_angle;
 		}
@@ -219,6 +237,7 @@ bool verify_convex_hull(std::vector<Point *> &input_points, std::list<Point *> &
 
 	// Verify ray tracing
 	for (std::vector<Point *>::iterator input_it = input_points.begin(); input_it != input_points.end(); ++input_it){
+		int on_boundary_count = 0;
 		int intersection_count = 0;
 		bool skip_this_point = false;
 		for (std::list<Point *>::iterator output_it = output_copy.begin(); output_it != output_copy.end(); ++output_it){
@@ -252,8 +271,11 @@ bool verify_convex_hull(std::vector<Point *> &input_points, std::list<Point *> &
 			if (( (*input_it)->y < max ) && ( (*input_it)->y > min )){
 				Line line_segment = get_line(**first_it, **second_it);
 				double x_value_on_line = ((-1 * line_segment.b * (*input_it)->y) - line_segment.c) / line_segment.a;
-				if((*input_it)->x <= x_value_on_line){
+				if((*input_it)->x < x_value_on_line){
 					intersection_count++;
+				}
+				else if((*input_it)->x == x_value_on_line){
+					on_boundary_count++;
 				}
 			}
 
@@ -276,14 +298,25 @@ bool verify_convex_hull(std::vector<Point *> &input_points, std::list<Point *> &
 			if(((*input_it)->y < max) && ((*input_it)->y > min)){
 				Line line_segment = get_line(**rev_it, **second_it);
 				double x_value_on_line = ((-1 * line_segment.b * (*input_it)->y) - line_segment.c) / line_segment.a;
-				if((*input_it)->x <= x_value_on_line){
+				if((*input_it)->x < x_value_on_line){
 					intersection_count++;
+				}
+				else if((*input_it)->x == x_value_on_line){
+					on_boundary_count++;
 				}
 			}
 		}
 
-		if(intersection_count != 1){
+		if( (intersection_count == 1 && on_boundary_count == 0) ||
+			(intersection_count == 1 && on_boundary_count == 1) ||
+			(intersection_count == 0 && on_boundary_count == 1) ){
+				// passes
+				continue;
+			}
+		else{
 			std::cout << "Fail: found input point outside the convex polygon!" << std::endl;
+			std::cout << "intersection_count = " << intersection_count << std::endl;
+			std::cout << "on_boundary_count = " << on_boundary_count << std::endl;
 			std::cout << "Point input_it = (" << (*input_it)->x << "," << (*input_it)->y << ")" << std::endl;
 			return false;
 		}
@@ -298,29 +331,62 @@ void test_case_1(void){
 
 	Point * tmp = new Point;
 	tmp->x = 0; tmp->y = 0; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -1; tmp->y = 1; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 1; tmp->y = 1; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 0; tmp->y = 2; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -5; tmp->y = 0; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -5; tmp->y = 5; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -5; tmp->y = 4; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -5; tmp->y = 6; input_points.push_back(tmp);
+
+	tmp = new Point; tmp->x = 5; tmp->y = 5; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 0; tmp->y = 10; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -1; tmp->y = 10; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 1; tmp->y = 10; input_points.push_back(tmp);
 
 	// inside polygon
-	tmp = new Point; tmp->x = 0.1; tmp->y = 0.5; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 0.1; tmp->y = 1.5; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -0.1; tmp->y = 0.5; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -0.1; tmp->y = 1.5; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 2; tmp->y = 3; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 2; tmp->y = 7; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -2; tmp->y = 3; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -2; tmp->y = 7; input_points.push_back(tmp);
+
+	// test ray tracing
+	tmp = new Point; tmp->x = 0; tmp->y = 0; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 5; tmp->y = 5; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 4; tmp->y = 7; input_points.push_back(tmp);
 
 	quick_hull_new(input_points, output_points);
 
 	std::cout << "Convex Hull has: " << output_points.size() << " points" << std::endl;
 	std::list<Point *>::iterator it;
 	for (it = output_points.begin(); it != output_points.end(); ++it){
-		std::cout << "Found point: (" << (*it)->x << "," << (*it)->y << ")" << std::endl;
+		std::cout << "Convex Hull has point: (" << (*it)->x << "," << (*it)->y << ")" << std::endl;
 	}
 
+	// tmp = new Point; tmp->x = -3; tmp->y = 1; input_points.push_back(tmp);
+	verify_convex_hull(input_points, output_points);
+}
+
+void test_case_2(void){
+	std::vector<Point *> input_points;
+	std::list<Point *> output_points;
+
+	srand(time(NULL));
+	int element_count = 1000000;
+	for(int i = 0; i < element_count; i++){
+		Point * tmp = new Point;
+		int value = rand() % 32767 - 15000;
+		tmp->x = value;
+		value = rand() % 32767 - 15000;
+		tmp->y = value;
+		input_points.push_back(tmp);
+	}
+
+	quick_hull_new(input_points, output_points);
+	std::cout << "Convex Hull has: " << output_points.size() << " points" << std::endl;
 	verify_convex_hull(input_points, output_points);
 }
 
 int main() {
-	test_case_1();
+	// test_case_1();
+	test_case_2();
 	printf("hi\n");
 	return(0);
 }
