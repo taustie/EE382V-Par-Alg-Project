@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <list>
+#include <chrono>
 
 #include "quick_hull.hpp"
 
@@ -369,7 +370,7 @@ void test_case_2(void){
 	std::list<Point *> output_points;
 
 	srand(time(NULL));
-	int element_count = 1000000;
+	int element_count = 100000;
 	for(int i = 0; i < element_count; i++){
 		Point * tmp = new Point;
 		int value = rand() % 32767 - 15000;
@@ -379,7 +380,14 @@ void test_case_2(void){
 		input_points.push_back(tmp);
 	}
 
+	auto t1 = std::chrono::high_resolution_clock::now();
 	quick_hull_new(input_points, output_points);
+	auto t2 = std::chrono::high_resolution_clock::now();
+	auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+	std::chrono::duration<double> ms_double = t2 - t1;
+	std::cout << ms_int.count() << "ms\n";
+    std::cout << ms_double.count() << "ms";
+
 	std::cout << "Convex Hull has: " << output_points.size() << " points" << std::endl;
 	verify_convex_hull(input_points, output_points);
 }

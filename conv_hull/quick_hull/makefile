@@ -1,5 +1,5 @@
 quickhull: quick_hull.cpp
-	g++ -o quickhull quick_hull.cpp -I.
+	g++ -O3 -std=c++11 -o quickhull quick_hull.cpp -I.
 
 clean:
 	rm quickhull
