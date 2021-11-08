@@ -66,13 +66,12 @@ void quick_hull_new(std::vector<Point *> &input_points, std::list<Point *> &conv
 	std::vector<Point *> duplicate_points_1(input_points);
 	std::vector<Point *> duplicate_points_2(input_points);
 	
-	
-
 	// Identify min and max -> O(n)
 	Point* min_point = input_points.at(0);
 	Point* max_point = input_points.at(0);
 	
 	#ifdef QUICKHULL_PARALLEL
+	std::cout << "In parallel" << std::endl;
 	get_max_min_points_parallel(input_points, &max_point, &min_point);
 	#else
 	for(std::vector<Point *>::iterator it = input_points.begin(); it != input_points.end(); ++it){
@@ -99,20 +98,42 @@ void quick_hull_new(std::vector<Point *> &input_points, std::list<Point *> &conv
 
 	std::cout << "min point: (" << min_point->x << "," << min_point->y << ")" << std::endl;
 	std::cout << "max point: (" << max_point->x << "," << max_point->y << ")" << std::endl;
+	
+	#ifdef QUICKHULL_PARALLEL
+	#pragma omp parallel sections
+	{
+		#pragma omp section
+		{
+			#endif
+			sub_hull_new(duplicate_points_1, min_point, max_point, convex_hull);
+			#ifdef QUICKHULL_PARALLEL
+		}
+		#pragma omp section
+		{
+			#endif
+			sub_hull_new(duplicate_points_2, max_point, min_point, convex_hull);
+			#ifdef QUICKHULL_PARALLEL
+		}
+	}
+	#endif
 
-	sub_hull_new(duplicate_points_1, min_point, max_point, convex_hull);
-	sub_hull_new(duplicate_points_2, max_point, min_point, convex_hull);
 }
 
 void sub_hull_new(std::vector<Point *> &input_points, Point* p1, Point* p2, std::list<Point *> &convex_hull){
 	// Modify input points to only be those to the left of the line
 	std::vector<Point *> left_points; // must copy (in parallel each subhull call will clear the other's list)
 	Vector ref_vector = form_zero_vector(*p1, *p2);
-	for(std::vector<Point *>::iterator it = input_points.begin(); it != input_points.end(); ++it){
-		Vector test_vector = form_zero_vector(*p2, **it);
+	
+	#ifdef QUICKHULL_PARALLEL
+	#pragma omp parallel for schedule(static)
+	#endif
+	for(long long int i = 0; i < input_points.size(); i++){
+		Vector test_vector = form_zero_vector(*p2, *input_points.at(i));
         if (cross_prod_orientation(ref_vector, test_vector)) {
-			// std::cout << "Adding point: (" << (*it)->x << "," << (*it)->y << ")" << std::endl;
-			left_points.push_back(*it);
+        	#ifdef QUICKHULL_PARALLEL
+        	#pragma omp critical
+        	#endif
+			left_points.push_back(input_points.at(i));
         }
 	}
 
@@ -122,7 +143,15 @@ void sub_hull_new(std::vector<Point *> &input_points, Point* p1, Point* p2, std:
 	if(left_points.size() < 2){
 		std::cout << "adding p1: (" << p1->x << "," << p1->y << ")" << std::endl;
 		// must update convex_hull atomically
-		if(left_points.size() == 1) {convex_hull.push_back(left_points.at(0));}
+		if(left_points.size() == 1) {
+			#ifdef QUICKHULL_PARALLEL
+		    #pragma omp critical
+		    #endif
+			convex_hull.push_back(left_points.at(0));
+		}
+		#ifdef QUICKHULL_PARALLEL
+        #pragma omp critical
+        #endif
 		convex_hull.push_back(p1);
 	}
 	else{
@@ -147,9 +176,25 @@ void sub_hull_new(std::vector<Point *> &input_points, Point* p1, Point* p2, std:
 				std::cout << "line is a: " << line.a << ", b: " << line.b << ", c: " << line.c << std::endl;
 			}
 		}
-
-		sub_hull_new(left_points, p1, max_point, convex_hull);
-		sub_hull_new(left_points, max_point, p2, convex_hull);
+		
+		#ifdef QUICKHULL_PARALLEL
+		#pragma omp parallel sections
+		{
+			#pragma omp section
+			{
+				#endif
+				sub_hull_new(left_points, p1, max_point, convex_hull);
+				#ifdef QUICKHULL_PARALLEL
+			}
+			#pragma omp section
+			{
+				#endif
+				sub_hull_new(left_points, max_point, p2, convex_hull);
+				#ifdef QUICKHULL_PARALLEL
+			}
+		}
+		#endif
+		
 	}
 }
 
@@ -472,7 +517,9 @@ void test_case_2(void){
 
 int main() {
 	//test_case_1();
+	
 	test_case_2();
+	
 	printf("hi\n");
 	return(0);
 }
