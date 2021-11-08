@@ -1,6 +1,10 @@
 #ifndef QUICK_HULL
 #define QUICK_HULL
 
+#include <iostream>
+#include <vector>
+#include <list>
+
 typedef struct point{
 	long long int x;
 	long long int y;

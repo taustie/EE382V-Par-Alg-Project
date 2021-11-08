@@ -1,10 +1,10 @@
 #include <cmath>
-#include <iostream>
-#include <vector>
-#include <list>
 #include <chrono>
 
 #include "quick_hull.hpp"
+#include "parallel_funcs.hpp"
+
+#define QUICKHULL_PARALLEL
 
 double dot_product(Point p1, Point p2){
 	double result = (p1.x * p1.x) + (p2.y + p2.y);
@@ -20,18 +20,25 @@ Line get_line(Point p1, Point p2){
 	return result;
 }
 
+Vector form_zero_vector(Point p1, Point p2){
+	Vector result;
+	result.x = p2.x - p1.x;
+	result.y = p2.y - p1.y;
+	return result;
+}
+
+double get_distance_point(Point p1, Point p2){
+	Vector v1 = form_zero_vector(p1, p2);
+	double num = v1.x * v1.x + v1.y * v1.y;
+	double result = sqrt(num);
+	return result;
+}
+
 double get_distance(Line l1, Point p1){
 	double num = (l1.a * p1.x) + (l1.b * p1.y) + l1.c;
 	num = std::abs(num);
 	double den = sqrt((l1.a * l1.a) + (l1.b * l1.b));
 	double result = num / den;
-	return result;
-}
-
-Vector form_zero_vector(Point p1, Point p2){
-	Vector result;
-	result.x = p2.x - p1.x;
-	result.y = p2.y - p1.y;
 	return result;
 }
 
@@ -58,10 +65,16 @@ void quick_hull_new(std::vector<Point *> &input_points, std::list<Point *> &conv
 	// Duplicate input points for each separate call to sub_hull -> O(n)
 	std::vector<Point *> duplicate_points_1(input_points);
 	std::vector<Point *> duplicate_points_2(input_points);
+	
+	
 
 	// Identify min and max -> O(n)
 	Point* min_point = input_points.at(0);
 	Point* max_point = input_points.at(0);
+	
+	#ifdef QUICKHULL_PARALLEL
+	get_max_min_points_parallel(input_points, &max_point, &min_point);
+	#else
 	for(std::vector<Point *>::iterator it = input_points.begin(); it != input_points.end(); ++it){
 		// because colinear points are not added to the convex hull must choose min and max more carefully
 		if(min_point->y > (*it)->y){ // min y point such that x is also minimal
@@ -82,6 +95,7 @@ void quick_hull_new(std::vector<Point *> &input_points, std::list<Point *> &conv
 			}
 		}
 	}
+	#endif
 
 	std::cout << "min point: (" << min_point->x << "," << min_point->y << ")" << std::endl;
 	std::cout << "max point: (" << max_point->x << "," << max_point->y << ")" << std::endl;
@@ -114,12 +128,23 @@ void sub_hull_new(std::vector<Point *> &input_points, Point* p1, Point* p2, std:
 	else{
 		Line line = get_line(*p1, *p2);
 		double max_dist = 0;
+		double max_dist_p1 = 0;
 		Point* max_point;
 		for(std::vector<Point *>::iterator it = left_points.begin(); it != left_points.end(); ++it){
 			double distance = get_distance(line, **it);
 			if(max_dist < distance){
 				max_dist = distance;
+				max_dist_p1 = get_distance_point(**it, *p1);
 				max_point = *it;
+			}
+			else if(max_dist == distance){
+				double value = get_distance_point(**it, *p1);
+				if(value > max_dist_p1){ // either > or < works (just want to break ties with a middle colinear point)
+					max_point = *it;
+					max_dist_p1 = value;
+				}
+				std::cout << "found identical distance with point: x = " << (*it)->x << ", y = " << (*it)->y << std::endl;
+				std::cout << "line is a: " << line.a << ", b: " << line.b << ", c: " << line.c << std::endl;
 			}
 		}
 
@@ -179,11 +204,11 @@ bool verify_ccw_angles(std::vector<Point *> &input_points, std::list<Point *> &o
 		Vector first_vector = form_zero_vector(**first_it, **second_it);
 		Vector second_vector = form_zero_vector(**second_it, **third_it);
 		if (!cross_prod_orientation(first_vector, second_vector)) {
-			// std::cout << "Point first_it = (" << (*first_it)->x << "," << (*first_it)->y << ")" << std::endl;
-			// std::cout << "Point second_it = (" << (*second_it)->x << "," << (*second_it)->y << ")" << std::endl;
-			// std::cout << "first_vector = (" << first_vector.x << "," << first_vector.y << ")" << std::endl;
-			// std::cout << "second_vector = (" << second_vector.x << "," << second_vector.y << ")" << std::endl;
-			std::cout << "Fail: points on Convex Hull are not strictly counter-clock wise" << std::endl;
+			std::cout << "Point first_it = (" << (*first_it)->x << "," << (*first_it)->y << ")" << std::endl;
+			std::cout << "Point second_it = (" << (*second_it)->x << "," << (*second_it)->y << ")" << std::endl;
+			std::cout << "first_vector = (" << first_vector.x << "," << first_vector.y << ")" << std::endl;
+			std::cout << "second_vector = (" << second_vector.x << "," << second_vector.y << ")" << std::endl;
+			std::cout << "Fail 1: points on Convex Hull are not strictly counter-clock wise" << std::endl;
 			return false;
         }
 		++first_it;
@@ -204,14 +229,14 @@ bool verify_ccw_angles(std::vector<Point *> &input_points, std::list<Point *> &o
 	Vector first_vector = form_zero_vector(p0, p1);
 	Vector second_vector = form_zero_vector(p1, p2);
 	if (!cross_prod_orientation(first_vector, second_vector)) {
-		std::cout << "Fail: points on Convex Hull are not strictly counter-clock wise" << std::endl;
+		std::cout << "Fail 2: points on Convex Hull are not strictly counter-clock wise" << std::endl;
 		return false;
 	}
 
 	first_vector = form_zero_vector(p1, p2);
 	second_vector = form_zero_vector(p2, p3);
 	if (!cross_prod_orientation(first_vector, second_vector)) {
-		std::cout << "Fail: points on Convex Hull are not strictly counter-clock wise" << std::endl;
+		std::cout << "Fail 3: points on Convex Hull are not strictly counter-clock wise" << std::endl;
 		return false;
 	}
 
@@ -329,6 +354,8 @@ bool verify_convex_hull(std::vector<Point *> &input_points, std::list<Point *> &
 void test_case_1(void){
 	std::vector<Point *> input_points;
 	std::list<Point *> output_points;
+	
+	#if 0
 
 	Point * tmp = new Point;
 	tmp->x = 0; tmp->y = 0; input_points.push_back(tmp);
@@ -352,6 +379,57 @@ void test_case_1(void){
 	tmp = new Point; tmp->x = 0; tmp->y = 0; input_points.push_back(tmp);
 	tmp = new Point; tmp->x = 5; tmp->y = 5; input_points.push_back(tmp);
 	tmp = new Point; tmp->x = 4; tmp->y = 7; input_points.push_back(tmp);
+	
+	tmp = new Point; tmp->x = 17766; tmp->y = 1191; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 17766; tmp->y = 7834; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 17766; tmp->y = 12999; input_points.push_back(tmp);
+
+	tmp = new Point; tmp->x = -4596; tmp->y = -15000; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -3422; tmp->y = 17766; input_points.push_back(tmp);
+	#endif
+	
+	Point * tmp = new Point;
+	tmp->x = -4596; tmp->y = -15000; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 12673; tmp->y = -15000; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 17037; tmp->y = -14997; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 17633; tmp->y = -14981; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 17693; tmp->y = -14969; input_points.push_back(tmp);
+
+	tmp = new Point; tmp->x = 17709; tmp->y = -14854; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 17761; tmp->y = -13763; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 17764; tmp->y = -12724; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 17766; tmp->y = 7834; input_points.push_back(tmp);
+	
+	tmp = new Point; tmp->x = 17766; tmp->y = 1191; input_points.push_back(tmp);
+
+	// inside polygon
+	
+	tmp = new Point; tmp->x = 17766; tmp->y = 12999; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 17764; tmp->y = 15911; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 17757; tmp->y = 17228; input_points.push_back(tmp);
+
+	// test ray tracing
+	tmp = new Point; tmp->x = 17730; tmp->y = 17676; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 17559; tmp->y = 17747; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 15414; tmp->y = 17766; input_points.push_back(tmp);
+
+	tmp = new Point; tmp->x = -3422; tmp->y = 17766; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -12900; tmp->y = 17765; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -14703; tmp->y = 17763; input_points.push_back(tmp);
+
+	tmp = new Point; tmp->x = -14916; tmp->y = 17756; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -14984; tmp->y = 17642; input_points.push_back(tmp);
+
+	tmp = new Point; tmp->x = -14996; tmp->y = 17160; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -14999; tmp->y = 15393; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -14999; tmp->y = -1822; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -14997; tmp->y = -14400; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -14982; tmp->y = -14798; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -14960; tmp->y = -14838; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -14710; tmp->y = -14922; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -14488; tmp->y = -14981; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -13890; tmp->y = -14996; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -9761; tmp->y = -14999; input_points.push_back(tmp);
 
 	quick_hull_new(input_points, output_points);
 
@@ -393,8 +471,9 @@ void test_case_2(void){
 }
 
 int main() {
-	// test_case_1();
+	//test_case_1();
 	test_case_2();
 	printf("hi\n");
 	return(0);
 }
+
