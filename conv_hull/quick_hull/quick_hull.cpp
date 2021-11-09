@@ -65,11 +65,11 @@ void quick_hull_new(std::vector<Point *> &input_points, std::list<Point *> &conv
 	// Duplicate input points for each separate call to sub_hull -> O(n)
 	std::vector<Point *> duplicate_points_1(input_points);
 	std::vector<Point *> duplicate_points_2(input_points);
-	
+
 	// Identify min and max -> O(n)
 	Point* min_point = input_points.at(0);
 	Point* max_point = input_points.at(0);
-	
+
 	#ifdef QUICKHULL_PARALLEL
 	std::cout << "In parallel" << std::endl;
 	get_max_min_points_parallel(input_points, &max_point, &min_point);
@@ -98,7 +98,7 @@ void quick_hull_new(std::vector<Point *> &input_points, std::list<Point *> &conv
 
 	std::cout << "min point: (" << min_point->x << "," << min_point->y << ")" << std::endl;
 	std::cout << "max point: (" << max_point->x << "," << max_point->y << ")" << std::endl;
-	
+
 	#ifdef QUICKHULL_PARALLEL
 	#pragma omp parallel sections
 	{
@@ -123,60 +123,101 @@ void sub_hull_new(std::vector<Point *> &input_points, Point* p1, Point* p2, std:
 	// Modify input points to only be those to the left of the line
 	std::vector<Point *> left_points; // must copy (in parallel each subhull call will clear the other's list)
 	Vector ref_vector = form_zero_vector(*p1, *p2);
-	
-	#ifdef QUICKHULL_PARALLEL
-	#pragma omp parallel for schedule(static)
-	#endif
+
+	// Sequential version is faster...Why is this???
+	// #ifdef QUICKHULL_PARALLEL
+	// #pragma omp parallel for schedule(static)
+	// #endif
 	for(long long int i = 0; i < input_points.size(); i++){
 		Vector test_vector = form_zero_vector(*p2, *input_points.at(i));
         if (cross_prod_orientation(ref_vector, test_vector)) {
-        	#ifdef QUICKHULL_PARALLEL
-        	#pragma omp critical
-        	#endif
-			left_points.push_back(input_points.at(i));
+        	// #ifdef QUICKHULL_PARALLEL
+        	 //#pragma omp critical
+        	// #endif
+			{
+				left_points.push_back(input_points.at(i));
+			}
         }
 	}
+
+	// See great resource at: https://www.py4u.net/discuss/63446
+
+	// Option 1: use merge reduction (same as option 2)
+	// #pragma omp declare reduction (merge : std::vector<Point *> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
+	// #pragma omp parallel for reduction(merge: left_points)
+	// for(long long int i=0; i < input_points.size(); i++) {
+	// 	Vector test_vector = form_zero_vector(*p2, *input_points.at(i));
+    //     if (cross_prod_orientation(ref_vector, test_vector)) {
+	// 		left_points.push_back(input_points.at(i));
+	// 	}
+	//
+	// }
+
+	// Option 2: use private copy and merge at end
+	// #pragma omp parallel
+	// {
+	//     std::vector<Point *> vec_private;
+	// 	Vector test_vector;
+	//     #pragma omp for nowait //fill vec_private in parallel
+	//     for(int i=0; i < input_points.size(); i++) {
+	// 		test_vector = form_zero_vector(*p2, *input_points.at(i));
+	// 		if (cross_prod_orientation(ref_vector, test_vector)) {
+	// 			vec_private.push_back(input_points.at(i));
+	// 		}
+	//     }
+	//     #pragma omp critical
+	//     left_points.insert(left_points.end(), vec_private.begin(), vec_private.end());
+	// }
+
+
 
 	std::cout << "left_points.size(): " << left_points.size() << std::endl;
 
 	// Update the convex hull
 	if(left_points.size() < 2){
-		std::cout << "adding p1: (" << p1->x << "," << p1->y << ")" << std::endl;
+
 		// must update convex_hull atomically
 		if(left_points.size() == 1) {
 			#ifdef QUICKHULL_PARALLEL
 		    #pragma omp critical
 		    #endif
-			convex_hull.push_back(left_points.at(0));
+			{
+				std::cout << "Add to hull point: (" << left_points.at(0)->x << "," << left_points.at(0)->y << ")" << std::endl;
+				convex_hull.push_back(left_points.at(0));
+			}
+
 		}
 		#ifdef QUICKHULL_PARALLEL
         #pragma omp critical
         #endif
-		convex_hull.push_back(p1);
+		{
+			std::cout << "Add to hull point: (" << p1->x << "," << p1->y << ")" << std::endl;
+			convex_hull.push_back(p1);
+		}
 	}
 	else{
 		Line line = get_line(*p1, *p2);
 		double max_dist = 0;
 		double max_dist_p1 = 0;
 		Point* max_point;
-		for(std::vector<Point *>::iterator it = left_points.begin(); it != left_points.end(); ++it){
-			double distance = get_distance(line, **it);
+		for(long long int i = 0; i < left_points.size(); i++){
+			double distance = get_distance(line, *left_points.at(i));
 			if(max_dist < distance){
 				max_dist = distance;
-				max_dist_p1 = get_distance_point(**it, *p1);
-				max_point = *it;
+				max_dist_p1 = get_distance_point(*left_points.at(i), *p1);
+				max_point = left_points.at(i);
 			}
 			else if(max_dist == distance){
-				double value = get_distance_point(**it, *p1);
-				if(value > max_dist_p1){ // either > or < works (just want to break ties with a middle colinear point)
-					max_point = *it;
+				double value = get_distance_point(*left_points.at(i), *p1);
+				if(value < max_dist_p1){ // either > or < works (just want to break ties with a middle colinear point)
+					max_point = left_points.at(i);
 					max_dist_p1 = value;
 				}
-				std::cout << "found identical distance with point: x = " << (*it)->x << ", y = " << (*it)->y << std::endl;
+				std::cout << "found identical distance with point: x = " << left_points.at(i)->x << ", y = " << left_points.at(i)->y << std::endl;
 				std::cout << "line is a: " << line.a << ", b: " << line.b << ", c: " << line.c << std::endl;
 			}
 		}
-		
+
 		#ifdef QUICKHULL_PARALLEL
 		#pragma omp parallel sections
 		{
@@ -194,7 +235,19 @@ void sub_hull_new(std::vector<Point *> &input_points, Point* p1, Point* p2, std:
 			}
 		}
 		#endif
-		
+
+
+		// #pragma omp parallel default(none) shared(left_points, p1, p2, max_point, convex_hull)
+		// {
+		// 	#pragma omp single
+		// 	{
+		// 		#pragma omp task //shared(left_points, p1, max_point, convex_hull)
+		// 		sub_hull_new(left_points, p1, max_point, convex_hull);
+		// 		#pragma omp task //shared(left_points, p2, max_point, convex_hull)
+		// 		sub_hull_new(left_points, max_point, p2, convex_hull);
+		// 	}
+		// }
+
 	}
 }
 
@@ -295,6 +348,11 @@ bool verify_convex_hull(std::vector<Point *> &input_points, std::list<Point *> &
 	for (std::list<Point *>::iterator output_it = output_copy.begin(); output_it != output_copy.end(); ++output_it){
 		if(G_MIN_POINT->y > (*output_it)->y){
 			G_MIN_POINT = *output_it;
+		}
+		else if(G_MIN_POINT->y == (*output_it)->y){
+			if(G_MIN_POINT->x > (*output_it)->x){
+				G_MIN_POINT = *output_it;
+			}
 		}
 	}
 
@@ -399,7 +457,7 @@ bool verify_convex_hull(std::vector<Point *> &input_points, std::list<Point *> &
 void test_case_1(void){
 	std::vector<Point *> input_points;
 	std::list<Point *> output_points;
-	
+
 	#if 0
 
 	Point * tmp = new Point;
@@ -424,7 +482,7 @@ void test_case_1(void){
 	tmp = new Point; tmp->x = 0; tmp->y = 0; input_points.push_back(tmp);
 	tmp = new Point; tmp->x = 5; tmp->y = 5; input_points.push_back(tmp);
 	tmp = new Point; tmp->x = 4; tmp->y = 7; input_points.push_back(tmp);
-	
+
 	tmp = new Point; tmp->x = 17766; tmp->y = 1191; input_points.push_back(tmp);
 	tmp = new Point; tmp->x = 17766; tmp->y = 7834; input_points.push_back(tmp);
 	tmp = new Point; tmp->x = 17766; tmp->y = 12999; input_points.push_back(tmp);
@@ -432,7 +490,7 @@ void test_case_1(void){
 	tmp = new Point; tmp->x = -4596; tmp->y = -15000; input_points.push_back(tmp);
 	tmp = new Point; tmp->x = -3422; tmp->y = 17766; input_points.push_back(tmp);
 	#endif
-	
+
 	Point * tmp = new Point;
 	tmp->x = -4596; tmp->y = -15000; input_points.push_back(tmp);
 	tmp = new Point; tmp->x = 12673; tmp->y = -15000; input_points.push_back(tmp);
@@ -444,11 +502,11 @@ void test_case_1(void){
 	tmp = new Point; tmp->x = 17761; tmp->y = -13763; input_points.push_back(tmp);
 	tmp = new Point; tmp->x = 17764; tmp->y = -12724; input_points.push_back(tmp);
 	tmp = new Point; tmp->x = 17766; tmp->y = 7834; input_points.push_back(tmp);
-	
+
 	tmp = new Point; tmp->x = 17766; tmp->y = 1191; input_points.push_back(tmp);
 
 	// inside polygon
-	
+
 	tmp = new Point; tmp->x = 17766; tmp->y = 12999; input_points.push_back(tmp);
 	tmp = new Point; tmp->x = 17764; tmp->y = 15911; input_points.push_back(tmp);
 	tmp = new Point; tmp->x = 17757; tmp->y = 17228; input_points.push_back(tmp);
@@ -493,7 +551,7 @@ void test_case_2(void){
 	std::list<Point *> output_points;
 
 	srand(time(NULL));
-	int element_count = 100000;
+	int element_count = 10000000;
 	for(int i = 0; i < element_count; i++){
 		Point * tmp = new Point;
 		int value = rand() % 32767 - 15000;
@@ -508,19 +566,14 @@ void test_case_2(void){
 	auto t2 = std::chrono::high_resolution_clock::now();
 	auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
 	std::chrono::duration<double> ms_double = t2 - t1;
-	std::cout << ms_int.count() << "ms\n";
-    std::cout << ms_double.count() << "ms";
 
-	std::cout << "Convex Hull has: " << output_points.size() << " points" << std::endl;
 	verify_convex_hull(input_points, output_points);
+	std::cout << "Convex Hull has: " << output_points.size() << " points" << std::endl;
+	std::cout << "Execution time: " << ms_int.count() << " (ms), " <<  ms_double.count() << " (s)" << std::endl;;
 }
 
 int main() {
 	//test_case_1();
-	
 	test_case_2();
-	
-	printf("hi\n");
 	return(0);
 }
-

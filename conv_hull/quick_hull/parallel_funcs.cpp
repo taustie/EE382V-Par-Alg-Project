@@ -4,7 +4,8 @@ Point * global_point;
 
 Point * get_empty(){
 	Point * tmp = new Point;
-	global_point->x = 0; global_point->y = 0;
+	tmp->x = global_point->x;
+	tmp->y = global_point->y;
 	return tmp;
 }
 
@@ -23,7 +24,7 @@ Point * myMax(Point * a, Point * b){
        		return b;
        	}
     }
-    
+
     return NULL; // this should never happen
 }
 
@@ -42,7 +43,7 @@ Point * myMin(Point * a, Point * b){
        		return a;
        	}
     }
-    
+
     return NULL; // this should never happen
 }
 
@@ -55,11 +56,11 @@ void get_max_min_points_parallel(std::vector<Point *> &input_points, Point** max
     #pragma omp declare reduction \
         (maxPoint:Point *:omp_out=myMax(omp_out, omp_in)) \
         initializer(omp_priv = get_empty())
-    
+
     #pragma omp declare reduction \
         (minPoint:Point *:omp_out=myMin(omp_out, omp_in)) \
         initializer(omp_priv = get_empty())
-    
+
     #pragma omp parallel for reduction(maxPoint : tmp_max) reduction(minPoint:tmp_min)
     for(int i = 0; i < input_points.size(); i++){
         if(input_points.at(i)->y > tmp_max->y){
@@ -70,7 +71,7 @@ void get_max_min_points_parallel(std::vector<Point *> &input_points, Point** max
         		tmp_max = input_points.at(i);
         	}
         }
-        
+
         if(input_points.at(i)->y < tmp_min->y){
         	tmp_min = input_points.at(i);
         }
@@ -80,13 +81,12 @@ void get_max_min_points_parallel(std::vector<Point *> &input_points, Point** max
         	}
         }
     }
-    
+
     *max = tmp_max;
     *min = tmp_min;
-    
+
     std::cout << "max x = " << (*max)->x << std::endl;
     std::cout << "max y = " << (*max)->y << std::endl;
     std::cout << "min x = " << (*min)->x << std::endl;
     std::cout << "min y = " << (*min)->y << std::endl;
-    
 }
