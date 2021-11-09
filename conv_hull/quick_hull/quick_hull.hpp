@@ -19,6 +19,9 @@ typedef struct line{
 	double c;
 } Line; // https://brilliant.org/wiki/dot-product-distance-between-point-and-a-line/
 
+Line get_line(Point p1, Point p2);
+double get_distance(Line l1, Point p1);
+double get_distance_point(Point p1, Point p2);
 void quick_hull_new(std::vector<Point *> &input_points, std::list<Point *> &convex_hull);
 void sub_hull_new(std::vector<Point *> &input_points, Point* p1, Point* p2, std::list<Point *> &convex_hull);
 

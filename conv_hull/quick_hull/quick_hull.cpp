@@ -196,27 +196,64 @@ void sub_hull_new(std::vector<Point *> &input_points, Point* p1, Point* p2, std:
 		}
 	}
 	else{
-		Line line = get_line(*p1, *p2);
-		double max_dist = 0;
-		double max_dist_p1 = 0;
-		Point* max_point;
-		for(long long int i = 0; i < left_points.size(); i++){
-			double distance = get_distance(line, *left_points.at(i));
-			if(max_dist < distance){
-				max_dist = distance;
-				max_dist_p1 = get_distance_point(*left_points.at(i), *p1);
-				max_point = left_points.at(i);
-			}
-			else if(max_dist == distance){
-				double value = get_distance_point(*left_points.at(i), *p1);
-				if(value < max_dist_p1){ // either > or < works (just want to break ties with a middle colinear point)
-					max_point = left_points.at(i);
-					max_dist_p1 = value;
+
+
+		#ifdef QUICKHULL_PARALLEL
+			Point* max_point;
+			Line line = get_line(*p1, *p2);
+
+			Dist_Info maxDistResult;
+			maxDistResult.index = 0;
+			maxDistResult.line_dist = 0.0;
+			maxDistResult.p1_dist = 0.0;
+			long long int index;
+
+			#pragma omp declare reduction \
+	        (maxDist:Dist_Info:omp_out=Dist_Max_Compare(omp_out, omp_in)) \
+	        initializer(omp_priv = neutral_distance())
+
+		    #pragma omp parallel for reduction(maxDist:maxDistResult)
+		    for(index = 0; index < left_points.size(); index++){
+				double distance = get_distance(line, *left_points.at(index));
+				if(maxDistResult.line_dist < distance){
+					maxDistResult.index = index;
+					maxDistResult.line_dist = distance;
+					maxDistResult.p1_dist = get_distance_point(*left_points.at(index), *p1);
 				}
-				std::cout << "found identical distance with point: x = " << left_points.at(i)->x << ", y = " << left_points.at(i)->y << std::endl;
-				std::cout << "line is a: " << line.a << ", b: " << line.b << ", c: " << line.c << std::endl;
+				else if(maxDistResult.line_dist == distance){
+					double distance_p1 = get_distance_point(*left_points.at(index), *p1);
+					if(distance_p1 < maxDistResult.p1_dist){
+						maxDistResult.index = index;
+						maxDistResult.p1_dist = distance_p1;
+					}
+				}
 			}
-		}
+			max_point = left_points.at(maxDistResult.index);
+
+		#else
+			Line line = get_line(*p1, *p2);
+			double max_dist = 0;
+			double max_dist_p1 = 0;
+			Point* max_point;
+			for(long long int i = 0; i < left_points.size(); i++){
+				double distance = get_distance(line, *left_points.at(i));
+				if(max_dist < distance){
+					max_dist = distance;
+					max_dist_p1 = get_distance_point(*left_points.at(i), *p1);
+					max_point = left_points.at(i);
+				}
+				else if(max_dist == distance){
+					double value = get_distance_point(*left_points.at(i), *p1);
+					if(value < max_dist_p1){ // either > or < works (just want to break ties with a middle colinear point)
+						max_point = left_points.at(i);
+						max_dist_p1 = value;
+					}
+					std::cout << "found identical distance with point: x = " << left_points.at(i)->x << ", y = " << left_points.at(i)->y << std::endl;
+					std::cout << "line is a: " << line.a << ", b: " << line.b << ", c: " << line.c << std::endl;
+				}
+			}
+		#endif
+
 
 		#ifdef QUICKHULL_PARALLEL
 		#pragma omp parallel sections
