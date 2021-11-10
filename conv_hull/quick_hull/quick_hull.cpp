@@ -134,6 +134,114 @@ void sub_hull(Point ** input_points, int size, Point* p1, Point* p2, std::list<P
 			}
 		}
 
+		//prefix sum using array
+		// #if 0
+		// Vector ref_vector = form_zero_vector(*p1, *p2);
+		// //int left_points_filter[input_points.size()];
+		// int * left_points_filter = new int[size];
+		// //int left_points_result[input_points.size()];
+		// int * left_points_result = new int[size];
+		// int x = 0;
+		//
+		// #pragma omp parallel for schedule(static)
+		// for(int k = 0; k < size; k++){
+		// 	Vector test_vector = form_zero_vector(*p2, *input_points[k]);
+		// 	if(cross_prod_orientation(ref_vector, test_vector)){
+		// 		left_points_filter[k] = 1;
+		// 	}
+		// 	else{
+		// 		left_points_filter[k] = 0;
+		// 		//std::cout << "index: " << k << " has 0 for filter" << std::endl;
+		// 	}
+		// }
+		//
+		// #pragma omp parallel for simd reduction(inscan,+: x)
+		// for (int k = 0; k < size; k++) {
+		// 	x += left_points_filter[k];
+		// 	#pragma omp scan inclusive(x)
+		// 	left_points_result[k] = x;
+		// }
+		//
+		// //std::vector<Point *> left_points(left_points_result[size - 1]);
+		// Point ** left_points = new Point *[left_points_result[size - 1]];
+		// int new_size = left_points_result[size - 1];
+		//
+		// #pragma omp parallel for schedule(static)
+		// for(int i = 0; i < size; i++){
+		// 	if(left_points_filter[i] == 1){
+		// 		//std::cout << "index left_points_result.at(i): " << left_points_result.at(i) - 1 << std::endl;
+		// 		left_points[left_points_result[i] - 1] = input_points[i];
+		// 	}
+		// }
+		//
+		// delete[] left_points_filter;
+		// delete[] left_points_result;
+		//
+		//
+		//
+		// // Update the convex hull
+		// if(new_size < 2){
+		// 	// must update convex_hull atomically
+		// 	if(new_size == 1) {
+		// 	    #pragma omp critical
+		// 		{
+		// 			convex_hull.push_back(left_points[0]);
+		// 		}
+		//
+		// 	}
+	    //     #pragma omp critical
+		// 	{
+		// 		convex_hull.push_back(p1);
+		// 	}
+		// }
+		// else{
+		// 		Point* max_point;
+		// 		Line line = get_line(*p1, *p2);
+		//
+		// 		Dist_Info maxDistResult;
+		// 		maxDistResult.index = 0;
+		// 		maxDistResult.line_dist = 0.0;
+		// 		maxDistResult.p1_dist = 0.0;
+		// 		long long int index;
+		//
+		// 		#pragma omp declare reduction \
+		//         (maxDist:Dist_Info:omp_out=Dist_Max_Compare(omp_out, omp_in)) \
+		//         initializer(omp_priv = neutral_distance())
+		//
+		// 	    #pragma omp parallel for reduction(maxDist:maxDistResult)
+		// 	    for(index = 0; index < new_size; index++){
+		// 			double distance = get_distance(line, *left_points[index]);
+		// 			if(maxDistResult.line_dist < distance){
+		// 				maxDistResult.index = index;
+		// 				maxDistResult.line_dist = distance;
+		// 				maxDistResult.p1_dist = get_distance_point(*left_points[index], *p1);
+		// 			}
+		// 			else if(maxDistResult.line_dist == distance){
+		// 				double distance_p1 = get_distance_point(*left_points[index], *p1);
+		// 				if(distance_p1 < maxDistResult.p1_dist){
+		// 					maxDistResult.index = index;
+		// 					maxDistResult.p1_dist = distance_p1;
+		// 				}
+		// 			}
+		// 		}
+		// 		max_point = left_points[maxDistResult.index];
+		//
+		// 	#pragma omp parallel sections
+		// 	{
+		// 		#pragma omp section
+		// 		{
+		// 			sub_hull(left_points, new_size, p1, max_point, convex_hull);
+		// 		}
+		// 		#pragma omp section
+		// 		{
+		// 			sub_hull(left_points, new_size, max_point, p2, convex_hull);
+		// 		}
+		// 	}
+		// }
+		//
+		// delete[] left_points;
+		// #endif
+
 
 		// Update the convex hull
 		if(left_points.size() < 2){
