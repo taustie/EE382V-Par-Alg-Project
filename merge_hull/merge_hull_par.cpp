@@ -297,58 +297,82 @@ bool compare_points(pair<int, int> p1, pair<int, int> q1)
 	
 }
 
-// Finds upper tangent of two polygons 'a' and 'b'
-// represented as two vectors.
 vector<pair<int, int>> merge_hulls(vector<pair<int, int>> a, vector<pair<int, int>> b)
 {
 	// n1 -> number of points in polygon a
 	// n2 -> number of points in polygon b
 	int n1 = a.size(), n2 = b.size();
 
-	int ia = 0, ib = 0;
+	int right_m = 0, left_m = 0;
 	for (int i=1; i<n1; i++)
-		if (a[i].first > a[ia].first)
-			ia = i;
+    {
+        if (a[i].first > a[right_m].first)
+        {
+            right_m = i;
+        }
+    }
+		
 
 	// ib -> leftmost point of b
 	for (int i=1; i<n2; i++)
-		if (b[i].first < b[ib].first)
-			ib=i;
-
+    {
+		if (b[i].first < b[left_m].first)
+        {
+			left_m=i;
+        }
+    }
 	// finding the upper tangent
-	int inda = ia, indb = ib;
-	bool done = 0;
-	while (!done)
-	{
-		done = 1;
-		while (orientation(b[indb], a[inda], a[(inda+1)%n1]) >=0)
-			inda = (inda + 1) % n1;
+	
+    int uppera, upperb, lowera, lowerb;
+	
+    
+    #pragma omp parallel sections
+    {
+        #pragma omp section
+        {
+            int curr_l = right_m, curr_r = left_m;
+            bool crosses = 1;
+            while (crosses)
+            {
+                crosses = 0;
+                while (orientation(b[curr_r], a[curr_l], a[(curr_l+1)%n1]) >=0)
+                {
+                    curr_l = (curr_l + 1) % n1;
+                }
+                    
 
-		while (orientation(a[inda], b[indb], b[(n2+indb-1)%n2]) <=0)
-		{
-			indb = (n2+indb-1)%n2;
-			done = 0;
-		}
-	}
+                while (orientation(a[curr_l], b[curr_r], b[(n2+curr_r-1)%n2]) <=0)
+                {
+                    curr_r = (n2+curr_r-1)%n2;
+                    crosses = 1;
+                }
+            }
+            uppera = curr_l;
+            upperb = curr_r;
+        }
 
-	int uppera = inda, upperb = indb;
-	inda = ia, indb=ib;
-	done = 0;
-	int g = 0;
-	while (!done)//finding the lower tangent
-	{
-		done = 1;
-		while (orientation(a[inda], b[indb], b[(indb+1)%n2])>=0)
-			indb=(indb+1)%n2;
+        #pragma omp section
+        {
+            int curr_l = right_m, curr_r = left_m;
+            bool crosses1 = 1;
+            while (crosses1)
+            {
+                crosses1 = 0;
+                while (orientation(a[curr_l], b[curr_r], b[(curr_r+1)%n2])>=0)
+                {
+                    curr_r=(curr_r+1)%n2;
+                }
+                while (orientation(b[curr_r], a[curr_l], a[(n1+curr_l-1)%n1])<=0)
+                {
+                    curr_l=(n1+curr_l-1)%n1;
+                    crosses1 = 1;
+                }
+            }
+            lowera = curr_l;
+            lowerb = curr_r;
+        }
+    }
 
-		while (orientation(b[indb], a[inda], a[(n1+inda-1)%n1])<=0)
-		{
-			inda=(n1+inda-1)%n1;
-			done=0;
-		}
-	}
-
-	int lowera = inda, lowerb = indb;
 	vector<pair<int, int>> ret;
 
 	int ind = uppera;
@@ -501,7 +525,7 @@ int main( int argc, char* argv[] )
 	std::mt19937 rng(rd());
 	std::uniform_int_distribution<int> uni(-100,100);
     vector<pair<int, int>> points;
-	for(int i = 0; i < 200; i++)
+	for(int i = 0; i < 210; i++)
     {
 		auto random_integer = uni(rng);
 		int x = (int)random_integer;
