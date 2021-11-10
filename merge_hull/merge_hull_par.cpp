@@ -65,10 +65,12 @@ vector<pair<int, int>> merge_hull(vector<pair<int, int>> left, vector<pair<int, 
 
     int right_m = 0;
     int left_m = 0;
+    //parallel reduce
 
     int left_max = left[right_m].first;
     int right_max = right[left_m].first;
 
+    #pragma omp parallel for reduction(max:left_max)
     for (int i = 1; i < l_size; i++)
     {
         if (left[i].first > left[right_m].first) 
@@ -78,6 +80,8 @@ vector<pair<int, int>> merge_hull(vector<pair<int, int>> left, vector<pair<int, 
         }
     }
 
+    //parallel reduce
+    #pragma omp parallel for reduction(max:right_max)
     for (int i = 1; i < r_size; i++)
     {
         if (right[i].first < right[left_m].first) 
@@ -148,8 +152,19 @@ vector<pair<int, int>> merge_hull(vector<pair<int, int>> left, vector<pair<int, 
 vector<pair<int, int>> brute_force(vector<pair<int, int>> points, int start, int end)
 {
     vector<pair<int, int>> selected_points;
-    for(int i = start; i <= end; i++) { 
-        selected_points.push_back(points[i]);
+
+    #pragma omp parallel
+    {
+        vector<pair<int, int>> temp;
+        #pragma omp for nowait schedule(static)
+        for(int i = start; i <= end; i++) { 
+            temp.push_back(points[i]);
+        }
+        #pragma omp for schedule(static) ordered
+        for(int i=0; i<omp_get_num_threads(); i++) {
+            #pragma omp ordered
+            selected_points.insert(selected_points.end(), temp.begin(), temp.end());
+        }
     }
 
 
@@ -201,26 +216,60 @@ vector<pair<int, int>> brute_force(vector<pair<int, int>> points, int start, int
 
     // parallel sort
     sort(sorted_hull.begin(), sorted_hull.end(), compare_points);
-    for (int i = 0; i < sorted_hull.size(); i++)
+
+    #pragma omp parallel
     {
-        sorted_hull[i] = make_pair(sorted_hull[i].first/sorted_hull.size(), sorted_hull[i].second/sorted_hull.size());
+        #pragma omp for
+        for (int i = 0; i < sorted_hull.size(); i++)
+        {
+            sorted_hull[i] = make_pair(sorted_hull[i].first/sorted_hull.size(), sorted_hull[i].second/sorted_hull.size());
+        }
     }
 
     
     return sorted_hull;
 }
 
-vector<pair<int, int>> find_convex_hull_seq(vector<pair<int, int>> points, int start, int end)
+// vector<pair<int, int>> find_convex_hull_seq(vector<pair<int, int>> points, int start, int end)
+// {
+//     if (start <= end && end - start + 1 <= 5)
+//     {
+//         return brute_force(points, start, end);
+//     }
+
+//     int mid_ind = (start + end) / 2;
+
+//     vector<pair<int, int>>right_hull = find_convex_hull_seq(points, mid_ind, end);
+//     vector<pair<int, int>>left_hull = find_convex_hull_seq(points, start, mid_ind-1);   
+
+//     vector<pair<int, int>> ans =  merge_hull(left_hull, right_hull);
+//     return ans;
+// }
+
+vector<pair<int, int>> find_convex_hull_par(vector<pair<int, int>> points, int start, int end, int threads)
 {
-    if (start <= end && end - start + 1 <= 5)
+    // if(threads == 1)
+    // {
+    //     return find_convex_hull_seq(points, start, end);
+    // }
+
+    if (end - start + 1 <= 5)
     {
         return brute_force(points, start, end);
     }
 
-    int mid_ind = (start + end) / 2;
+    int mid_ind = (start + end) /2 ;
 
-    vector<pair<int, int>>right_hull = find_convex_hull_seq(points, mid_ind, end);
-    vector<pair<int, int>>left_hull = find_convex_hull_seq(points, start, mid_ind-1);   
+    vector<pair<int, int>>right_hull;
+    vector<pair<int, int>>left_hull;
+    #pragma omp parallel sections
+	{
+		#pragma omp section
+            right_hull = find_convex_hull_par(points, mid_ind, end, threads/2);
+
+        #pragma omp section
+            left_hull = find_convex_hull_par(points, start, mid_ind-1, threads - (threads/2));    
+    }
 
     vector<pair<int, int>> ans =  merge_hull(left_hull, right_hull);
     return ans;
@@ -228,7 +277,12 @@ vector<pair<int, int>> find_convex_hull_seq(vector<pair<int, int>> points, int s
 
 // Driver code
 int main( int argc, char* argv[] )
-{ 
+{
+    int threads = omp_get_max_threads();
+	omp_set_num_threads(threads);
+    omp_set_nested(1);
+    
+    
     std::random_device rd;
 	std::mt19937 rng(rd());
 	std::uniform_int_distribution<int> uni(-100,100);
@@ -241,10 +295,10 @@ int main( int argc, char* argv[] )
 		int y = (int)random_integer;
 		points.push_back(make_pair(x, y));
 	}
-    //parallel sort
+    
     sort(points.begin(), points.end());
     auto start = high_resolution_clock::now();
-    vector<pair<int, int>> final_hull = find_convex_hull_seq(points, 0, points.size() - 1);
+    vector<pair<int, int>> final_hull = find_convex_hull_par(points, 0, points.size() - 1, threads);
     auto end = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(end - start);
 	cout << duration.count() << endl;

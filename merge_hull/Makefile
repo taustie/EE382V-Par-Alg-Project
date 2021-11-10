@@ -17,8 +17,8 @@ COMPILE_COMMAND := $(CC) $(CFLAGS)
  
 OUTPUT := my_test
  
-all: omp_test.cpp
-	$(COMPILE_COMMAND) -o $(OUTPUT) omp_test.cpp
+all: merge_hull_par.cpp
+	$(COMPILE_COMMAND) -o $(OUTPUT) merge_hull_par.cpp
  
 clean:
 	rm -f *.o $(OUTPUT).*
