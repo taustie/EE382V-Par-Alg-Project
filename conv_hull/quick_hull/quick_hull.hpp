@@ -21,10 +21,13 @@ typedef struct line{
 
 Line get_line(Point p1, Point p2);
 Vector form_zero_vector(Point p1, Point p2);
+double get_distance_point(Point p1, Point p2);
 double get_distance(Line l1, Point p1);
 bool cross_prod_orientation(Vector v1, Vector v2);
-double get_distance_point(Point p1, Point p2);
+void get_max_min_points(std::vector<Point *> &input_points, Point** max, Point** min);
 void quick_hull_new(std::vector<Point *> &input_points, std::list<Point *> &convex_hull);
 void sub_hull_new(std::vector<Point *> &input_points, Point* p1, Point* p2, std::list<Point *> &convex_hull);
+
+void sub_hull(Point ** input_points, int size, Point* p1, Point* p2, std::list<Point *> &convex_hull);
 
 #endif

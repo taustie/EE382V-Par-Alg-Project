@@ -4,6 +4,7 @@
 #include "quick_hull.hpp"
 #include "parallel_funcs.hpp"
 #include "verify_conv_hull.hpp"
+#include "test_config.hpp"
 
 void test_case_1(void){
 	std::vector<Point *> input_points;
