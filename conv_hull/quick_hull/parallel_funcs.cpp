@@ -113,10 +113,10 @@ void get_max_min_points_parallel(std::vector<Point *> &input_points, Point** max
     *max = tmp_max;
     *min = tmp_min;
 
-    std::cout << "max x = " << (*max)->x << std::endl;
-    std::cout << "max y = " << (*max)->y << std::endl;
-    std::cout << "min x = " << (*min)->x << std::endl;
-    std::cout << "min y = " << (*min)->y << std::endl;
+    // std::cout << "max x = " << (*max)->x << std::endl;
+    // std::cout << "max y = " << (*max)->y << std::endl;
+    // std::cout << "min x = " << (*min)->x << std::endl;
+    // std::cout << "min y = " << (*min)->y << std::endl;
 }
 
 
