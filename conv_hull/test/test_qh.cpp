@@ -1,10 +1,34 @@
 #include <cmath>
 #include <chrono>
+#include <iostream>
+#include <fstream>
 
 #include "quick_hull.hpp"
 #include "parallel_funcs.hpp"
 #include "verify_conv_hull.hpp"
 #include "test_config.hpp"
+
+void write_input(std::vector<Point *> &input_points){
+	std::ofstream input_points_file;
+    input_points_file.open("../visualize/input.txt");
+	for(int i = 0; i < input_points.size(); i++){
+		input_points_file << "(" << input_points.at(i)->x << ", "<< input_points.at(i)->y << ")" << std::endl;
+	}
+    input_points_file.close();
+}
+
+void write_output(std::list<Point *> &output_points){
+	// output_points.sort(compare_angles);
+	std::list<Point *> output_copy(output_points);
+	find_min_and_sort(output_copy);
+	std::ofstream output_points_file;
+    output_points_file.open("../visualize/output.txt");
+	for (std::list<Point *>::iterator it = output_copy.begin(); it != output_copy.end(); ++it){
+		output_points_file << "(" << (*it)->x << ", "<< (*it)->y << ")" << std::endl;
+	}
+	output_points_file << "(" << output_copy.front()->x << ", "<< output_copy.front()->y << ")" << std::endl;
+    output_points_file.close();
+}
 
 void test_case_1(void){
 	std::vector<Point *> input_points;
@@ -104,21 +128,28 @@ void test_case_2(void){
 	std::list<Point *> output_points;
 
 	srand(time(NULL));
-	int element_count = 10000000;
+	int element_count = 10000;
 	for(int i = 0; i < element_count; i++){
 		Point * tmp = new Point;
 		int value = rand() % 32767 - 15000;
 		tmp->x = value;
-		value = rand() % 32767 - 15000;
-		tmp->y = value;
+		//value = rand() % 32767 - 15000;
+		tmp->y = sqrt((18000*18000) - (value * value));
+		if((value % 2) == 0){
+			tmp->y *= -1;
+		}
+		tmp->y += rand() % 5000 - 2500;
+
 		input_points.push_back(tmp);
 	}
 
+	write_input(input_points);
 	auto t1 = std::chrono::high_resolution_clock::now();
 	quick_hull_new(input_points, output_points);
 	auto t2 = std::chrono::high_resolution_clock::now();
 	auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
 	std::chrono::duration<double> ms_double = t2 - t1;
+	write_output(output_points);
 
 	verify_convex_hull(input_points, output_points);
 	std::cout << "Convex Hull has: " << output_points.size() << " points" << std::endl;
@@ -165,8 +196,31 @@ void test_case_3(void){
 
 }
 
+void test_case_4(void){
+	std::vector<Point *> input_points;
+	std::list<Point *> output_points;
+
+	Point * tmp = new Point;
+	tmp->x = 0; tmp->y = 0; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 2; tmp->y = 0; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 4; tmp->y = 4; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = -5; tmp->y = 0; input_points.push_back(tmp);
+
+	write_input(input_points);
+	quick_hull_new(input_points, output_points);
+	write_output(output_points);
+	std::cout << "Convex Hull has: " << output_points.size() << " points" << std::endl;
+	std::list<Point *>::iterator it;
+	for (it = output_points.begin(); it != output_points.end(); ++it){
+		std::cout << "Convex Hull has point: (" << (*it)->x << "," << (*it)->y << ")" << std::endl;
+	}
+
+	// tmp = new Point; tmp->x = -3; tmp->y = 1; input_points.push_back(tmp);
+	verify_convex_hull(input_points, output_points);
+}
+
 int main() {
 	//test_case_1();
-	test_case_3();
+	test_case_2();
 	return(0);
 }

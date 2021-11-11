@@ -92,11 +92,10 @@ bool verify_ccw_angles(std::vector<Point *> &input_points, std::list<Point *> &o
 	return true;
 }
 
-bool verify_convex_hull(std::vector<Point *> &input_points, std::list<Point *> &output_points){
+void find_min_and_sort(std::list<Point *> &output_points){
 	// Find the minimum point, then sort points by angle from min point
-	std::list<Point *> output_copy(output_points);
-	G_MIN_POINT = output_copy.front();
-	for (std::list<Point *>::iterator output_it = output_copy.begin(); output_it != output_copy.end(); ++output_it){
+	G_MIN_POINT = output_points.front();
+	for (std::list<Point *>::iterator output_it = output_points.begin(); output_it != output_points.end(); ++output_it){
 		if(G_MIN_POINT->y > (*output_it)->y){
 			G_MIN_POINT = *output_it;
 		}
@@ -107,7 +106,14 @@ bool verify_convex_hull(std::vector<Point *> &input_points, std::list<Point *> &
 		}
 	}
 
-	output_copy.sort(compare_angles);
+	output_points.sort(compare_angles);
+}
+
+bool verify_convex_hull(std::vector<Point *> &input_points, std::list<Point *> &output_points){
+	// Find the minimum point, then sort points by angle from min point
+	std::list<Point *> output_copy(output_points);
+	find_min_and_sort(output_copy);
+	
 	// for (std::list<Point *>::iterator output_it = output_copy.begin(); output_it != output_copy.end(); ++output_it){
 	// 	std::cout << "Point = (" << (*output_it)->x << "," << (*output_it)->y << ")" << std::endl;
 	// }
