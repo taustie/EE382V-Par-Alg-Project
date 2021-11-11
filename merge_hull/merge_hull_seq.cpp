@@ -313,13 +313,22 @@ vector<pair<int, int>> merger(vector<pair<int, int> > a,
 	while (!done)
 	{
 		done = 1;
-		while (orientation(b[indb], a[inda], a[(inda+1)%n1]) >=0)
+		while (orientation(b[indb], a[inda], a[(inda+1)%n1]) >0)
+		{
 			inda = (inda + 1) % n1;
-
-		while (orientation(a[inda], b[indb], b[(n2+indb-1)%n2]) <=0)
+			cout << "while 1" << endl;
+			// cout << inda << endl;
+			cout << b[inda].first;
+			cout << b[inda].second << endl;
+		}
+			
+		while (orientation(a[inda], b[indb], b[(n2+indb-1)%n2]) <0)
 		{
 			indb = (n2+indb-1)%n2;
 			done = 0;
+			cout << "while 2" << endl;
+			cout << b[indb].first;
+			cout << b[indb].second << endl;
 		}
 	}
 
@@ -327,16 +336,29 @@ vector<pair<int, int>> merger(vector<pair<int, int> > a,
 	inda = ia, indb=ib;
 	done = 0;
 	int g = 0;
+
+
+
+
 	while (!done)//finding the lower tangent
 	{
 		done = 1;
-		while (orientation(a[inda], b[indb], b[(indb+1)%n2])>=0)
+		while (orientation(a[inda], b[indb], b[(indb+1)%n2])>0)
+		{
 			indb=(indb+1)%n2;
+			cout << "while 3" << endl;
+			cout << b[indb].first;
+			cout << b[indb].second << endl;
+		}
+			
 
-		while (orientation(b[indb], a[inda], a[(n1+inda-1)%n1])<=0)
+		while (orientation(b[indb], a[inda], a[(n1+inda-1)%n1])<0)
 		{
 			inda=(n1+inda-1)%n1;
 			done=0;
+			cout << "while 4" << endl;
+			cout << b[inda].first;
+			cout << b[inda].second << endl;
 		}
 	}
 
@@ -460,9 +482,9 @@ int main( int argc, char* argv[] )
 { 
     std::random_device rd;
 	std::mt19937 rng(rd());
-	std::uniform_int_distribution<int> uni(-100,100);
+	std::uniform_int_distribution<int> uni(1,100);
     vector<pair<int, int>> points;
-	for(int i = 0; i < 500; i++)
+	for(int i = 0; i < 10000; i++)
     {
 		auto random_integer = uni(rng);
 		int x = (int)random_integer;
@@ -471,6 +493,8 @@ int main( int argc, char* argv[] )
 		points.push_back(make_pair(x, y));
 	}
     //parallel sort
+
+
     sort(points.begin(), points.end());
     auto start = high_resolution_clock::now();
     vector<pair<int, int>> final_hull = divide(points);
