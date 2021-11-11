@@ -2,7 +2,7 @@
 #include <cmath>
 #include <vector>
 #include <omp.h>
-#include<bits/stdc++.h>
+//#include <bits/stdc++.h>
 #include <chrono>
 #include <random>
 using namespace std::chrono;
@@ -24,7 +24,7 @@ using namespace std;
 //     {
 //         return 3;
 //     }
-//     else 
+//     else
 //     {
 //         return 4;
 //     }
@@ -33,7 +33,7 @@ using namespace std;
 // int orientation(pair<int, int> a, pair<int, int> b, pair<int, int> c)
 // {
 //     int res = (b.second-a.second)*(c.first-b.first) - (c.second-b.second)*(b.first-a.first);
-    
+
 //     if (res == 0)
 //     {
 //         return 0;
@@ -49,11 +49,11 @@ using namespace std;
 // {
 //     int q1 = find_quadrant(point1.first - mid.first, point1.second - mid.second);
 //     int q2 = find_quadrant(point2.first - mid.first, point2.second - mid.second);
-//     if (q1 != q2) 
+//     if (q1 != q2)
 //     {
 //         return (q1 < q2);
 //     }
-        
+
 //     return (point1.second * point2.first < point1.second * point2.first);
 // }
 
@@ -71,7 +71,7 @@ using namespace std;
 
 //     for (int i = 1; i < l_size; i++)
 //     {
-//         if (left[i].first > left[right_m].first) 
+//         if (left[i].first > left[right_m].first)
 //         {
 //             left_max = left[i].first;
 //             right_m = i;
@@ -80,7 +80,7 @@ using namespace std;
 
 //     for (int i = 1; i < r_size; i++)
 //     {
-//         if (right[i].first < right[left_m].first) 
+//         if (right[i].first < right[left_m].first)
 //         {
 //             right_max = right[i].first;
 //             left_m = i;
@@ -97,7 +97,7 @@ using namespace std;
 //         {
 //             left_c=(left_c+1)%l_size;
 //         }
-            
+
 //         while (orientation(left[left_c], right[right_c], right[(r_size+right_c-1)%r_size]) <=0)
 //         {
 //             right_c = (r_size+right_c-1)%r_size;
@@ -141,14 +141,14 @@ using namespace std;
 //         combined_hull.push_back(right[ind]);
 //     }
 
-    
+
 //     return combined_hull;
 // }
 
 // vector<pair<int, int>> brute_force(vector<pair<int, int>> points, int start, int end)
 // {
 //     vector<pair<int, int>> selected_points;
-//     for(int i = start; i <= end; i++) { 
+//     for(int i = start; i <= end; i++) {
 //         selected_points.push_back(points[i]);
 //     }
 
@@ -176,7 +176,7 @@ using namespace std;
 //                 {
 //                     neg_points.push_back(1);
 //                 }
-                    
+
 //                 if (side >= 0)
 //                 {
 //                     pos_points.push_back(1);
@@ -189,7 +189,7 @@ using namespace std;
 //             }
 //         }
 //     }
-        
+
 //     mid = {0, 0};
 //     for (int i = 0; i < sorted_hull.size(); i++)
 //     {
@@ -206,7 +206,7 @@ using namespace std;
 //         sorted_hull[i] = make_pair(sorted_hull[i].first/sorted_hull.size(), sorted_hull[i].second/sorted_hull.size());
 //     }
 
-    
+
 //     return sorted_hull;
 // }
 
@@ -220,7 +220,7 @@ using namespace std;
 //     int mid_ind = (start + end) / 2;
 
 //     vector<pair<int, int>>right_hull = find_convex_hull_seq(points, mid_ind, end);
-//     vector<pair<int, int>>left_hull = find_convex_hull_seq(points, start, mid_ind-1);   
+//     vector<pair<int, int>>left_hull = find_convex_hull_seq(points, start, mid_ind-1);
 
 //     vector<pair<int, int>> ans =  merge_hull(left_hull, right_hull);
 //     return ans;
@@ -238,7 +238,7 @@ using namespace std;
 
 // A divide and conquer program to find convex
 // hull of a given set of points.
-#include<bits/stdc++.h>
+//#include <bits/stdc++.h>
 using namespace std;
 
 pair<int, int> mid;
@@ -253,11 +253,11 @@ int find_quad(pair<int, int> p)
     {
         return 2;
     }
-		
+
 	if (p.first <= 0 && p.second <= 0)
     {
         return 3;
-    }	
+    }
 	return 4;
 }
 
@@ -267,7 +267,7 @@ int orientation(pair<int, int> a, pair<int, int> b, pair<int, int> c)
 	int res = (b.second-a.second)*(c.first-b.first) - (c.second-b.second)*(b.first-a.first);
 
 	if (res == 0)
-    {  
+    {
         return 0;
     }
 	else if (res > 0)
@@ -294,7 +294,7 @@ bool compare_points(pair<int, int> p1, pair<int, int> q1)
     } else {
         return (q.second*p.first > p.second*q.first);
     }
-	
+
 }
 
 // Finds upper tangent of two polygons 'a' and 'b'
@@ -480,41 +480,8 @@ vector<pair<int, int>> convex_hull_par(vector<pair<int, int>> points)
         {
             right_hull = convex_hull_par(right);
         }
-            
+
     }
 
 	return merge_hulls(left_hull, right_hull);
-}
-
-
-
-
-
-
-
-
-
-// Driver code
-int main( int argc, char* argv[] )
-{ 
-    std::random_device rd;
-	std::mt19937 rng(rd());
-	std::uniform_int_distribution<int> uni(-100,100);
-    vector<pair<int, int>> points;
-	for(int i = 0; i < 200; i++)
-    {
-		auto random_integer = uni(rng);
-		int x = (int)random_integer;
-		random_integer = uni(rng);
-		int y = (int)random_integer;
-		points.push_back(make_pair(x, y));
-	}
-    //parallel sort
-    sort(points.begin(), points.end());
-    auto start = high_resolution_clock::now();
-    vector<pair<int, int>> final_hull = convex_hull_par(points);
-    auto end = high_resolution_clock::now();
-	auto duration = duration_cast<microseconds>(end - start);
-	cout << duration.count() << endl;
-    return 0;
 }
