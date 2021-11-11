@@ -5,6 +5,7 @@
 //#include <bits/stdc++.h>
 #include <chrono>
 #include <random>
+#include <algorithm>
 using namespace std::chrono;
 using namespace std;
 
