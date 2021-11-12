@@ -264,6 +264,7 @@ int orientation(pair<int, int> a, pair<int, int> b,
 {
 	int res = (b.second-a.second)*(c.first-b.first) -
 			(c.second-b.second)*(b.first-a.first);
+			
 
 	if (res == 0)
 		return 0;
@@ -313,13 +314,50 @@ vector<pair<int, int>> merger(vector<pair<int, int> > a,
 	while (!done)
 	{
 		done = 1;
-		while (orientation(b[indb], a[inda], a[(inda+1)%n1]) >=0)
-			inda = (inda + 1) % n1;
-
-		while (orientation(a[inda], b[indb], b[(n2+indb-1)%n2]) <=0)
+		while (orientation(b[indb], a[inda], a[(inda+1)%n1]) >= 0)
 		{
-			indb = (n2+indb-1)%n2;
+			if(orientation(b[indb], a[inda], a[(inda+1)%n1]) == 0)
+			{
+				if(a.size() == 1)
+				{
+					cout << "break while 1" << endl;
+					break;
+				} else
+				{
+					a.erase(a.begin() + inda);
+				}
+			} else
+			{
+				inda = (inda + 1) % n1;
+			}
+			cout << "while 1" << endl;
+			// cout << inda << endl;
+			// cout << b[indb].first;
+			// cout << a[inda].first << endl;
+		}
+			
+		while (orientation(a[inda], b[indb], b[(n2+indb-1)%n2]) <= 0)
+		{
+
+			if(orientation(a[inda], b[indb], b[(n2+indb-1)%n2]) == 0)
+			{
+				if(b.size() == 1)
+				{
+					cout << "break while 2" << endl;
+					break;
+				} else
+				{
+					b.erase(b.begin() + indb);
+				}
+			} else
+			{
+				indb = (n2+indb-1)%n2;
+			}
+
 			done = 0;
+			cout << "while 2" << endl;
+			cout << b[indb].first;
+			cout << a[inda].first << endl;
 		}
 	}
 
@@ -327,16 +365,60 @@ vector<pair<int, int>> merger(vector<pair<int, int> > a,
 	inda = ia, indb=ib;
 	done = 0;
 	int g = 0;
+
+
+
+
 	while (!done)//finding the lower tangent
 	{
 		done = 1;
-		while (orientation(a[inda], b[indb], b[(indb+1)%n2])>=0)
-			indb=(indb+1)%n2;
-
-		while (orientation(b[indb], a[inda], a[(n1+inda-1)%n1])<=0)
+		while (orientation(a[inda], b[indb], b[(indb+1)%n2])>= 0)
 		{
-			inda=(n1+inda-1)%n1;
-			done=0;
+
+			if(orientation(a[inda], b[indb], b[(indb+1)%n2]) == 0)
+			{
+				if(b.size() == 1)
+				{
+					cout << "break while 3" << endl;
+					break;
+				} else
+				{
+					b.erase(b.begin() + indb);
+				}
+			} else
+			{
+				indb=(indb+1)%n2;
+			}
+
+			
+			cout << "while 3" << endl;
+			cout << b[indb].first;
+			cout << a[inda].first << endl;
+		}
+			
+
+		while (orientation(b[indb], a[inda], a[(n1+inda-1)%n1]) <= 0)
+		{
+
+			if(orientation(b[indb], a[inda], a[(n1+inda-1)%n1]) == 0)
+			{
+				if(a.size() == 1)
+				{
+					cout << "break while 4" << endl;
+					break;
+				} else
+				{
+					a.erase(a.begin() + inda);
+				}
+			} else
+			{
+				inda=(n1+inda-1)%n1;
+				done=0;
+			}
+			
+			cout << "while 4" << endl;
+			cout << b[indb].first;
+			cout << a[inda].first << endl;
 		}
 	}
 
@@ -460,17 +542,24 @@ int main( int argc, char* argv[] )
 { 
     std::random_device rd;
 	std::mt19937 rng(rd());
-	std::uniform_int_distribution<int> uni(-100,100);
+	std::uniform_int_distribution<int> uni(-100, 100);
     vector<pair<int, int>> points;
-	for(int i = 0; i < 500; i++)
+	set<int> mx;
+	set<int> my;
+	for(int i = 0; i < 250; i++)
     {
 		auto random_integer = uni(rng);
 		int x = (int)random_integer;
 		random_integer = uni(rng);
 		int y = (int)random_integer;
-		points.push_back(make_pair(x, y));
+	
+			points.push_back(make_pair(x, y));
+			mx.insert(x);
+			my.insert(y);
 	}
     //parallel sort
+
+
     sort(points.begin(), points.end());
     auto start = high_resolution_clock::now();
     vector<pair<int, int>> final_hull = divide(points);
