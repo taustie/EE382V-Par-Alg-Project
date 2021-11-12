@@ -1,0 +1,16 @@
+#!/bin/bash 
+#-xe
+
+mkdir ./output/
+./../test/test_qh &
+pid=$(echo $!)
+echo PID: $pid
+for x in $(seq 0 100)
+do
+	gdb -ex "set pagination 0" -ex "thread apply all bt" \
+	-batch -p $pid > ./output/d$x.txt
+	sleep 0.05
+done
+
+perl stackcollapse-gdb.pl output/d*txt > ./output/tmp.dat
+perl flamegraph.pl ./output/tmp.dat > output.svg
