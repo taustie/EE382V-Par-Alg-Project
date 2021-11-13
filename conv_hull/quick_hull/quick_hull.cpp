@@ -51,365 +51,67 @@ bool cross_prod_orientation(Vector v1, Vector v2){
 	}
 }
 
-void get_max_min_points(std::vector<Point *> &input_points, Point** max, Point** min){
-	Point *tmp_min = NULL;
-	Point *tmp_max = NULL;
-
-    for(int i = 0; i < input_points.size(); i++){
-		if(tmp_max == NULL){
-			tmp_max = input_points.at(i);
-		}
-        else if(input_points.at(i)->y > tmp_max->y){
-        	tmp_max = input_points.at(i);
-        }
-        else if(input_points.at(i)->y == tmp_max->y){
-        	if(input_points.at(i)->x > tmp_max->x){
-        		tmp_max = input_points.at(i);
-        	}
-        }
-
-		if(tmp_min == NULL){
-			tmp_min = input_points.at(i);
-		}
-        else if(input_points.at(i)->y < tmp_min->y){
-        	tmp_min = input_points.at(i);
-        }
-        else if(input_points.at(i)->y == tmp_min->y){
-        	if(input_points.at(i)->x < tmp_min->x){
-        		tmp_min = input_points.at(i);
-        	}
-        }
-    }
-
-    *max = tmp_max;
-    *min = tmp_min;
-}
-
-void quick_hull_new(std::vector<Point *> &input_points, std::list<Point *> &convex_hull){
-	// Identify min and max -> O(n)
+void quick_hull(std::vector<Point *> &input_points, std::list<Point *> &convex_hull){
+	// Identify min and max
 	Point* min_point = input_points.at(0);
 	Point* max_point = input_points.at(0);
 
-	#ifdef QUICKHULL_PARALLEL
 	get_max_min_points_parallel(input_points, &max_point, &min_point);
-	#else
-	get_max_min_points(input_points, &max_point, &min_point);
-	#endif
 
 	std::cout << "min point: (" << min_point->x << "," << min_point->y << ")" << std::endl;
 	std::cout << "max point: (" << max_point->x << "," << max_point->y << ")" << std::endl;
 
-	#ifdef QUICKHULL_PARALLEL
 	#pragma omp parallel sections
 	{
 		#pragma omp section
 		{
-			#endif
-			//sub_hull_new(input_points, min_point, max_point, convex_hull);
 			sub_hull(input_points.data(), input_points.size(), min_point, max_point, convex_hull);
-			#ifdef QUICKHULL_PARALLEL
 		}
 		#pragma omp section
 		{
-			#endif
-			//sub_hull_new(input_points, max_point, min_point, convex_hull);
 			sub_hull(input_points.data(), input_points.size(), max_point, min_point, convex_hull);
-			#ifdef QUICKHULL_PARALLEL
 		}
 	}
-	#endif
+}
 
+void get_points_on_left_sequential(std::vector<Point *> &left_points, Point ** input_points, int size, Point* p1, Point* p2){
+	Vector ref_vector = form_zero_vector(*p1, *p2);
+	for(long long int i = 0; i < size; i++){
+		Vector test_vector = form_zero_vector(*p2, *input_points[i]);
+		if (cross_prod_orientation(ref_vector, test_vector)) {
+			left_points.push_back(input_points[i]);
+		}
+	}
 }
 
 void sub_hull(Point ** input_points, int size, Point* p1, Point* p2, std::list<Point *> &convex_hull){
-	#ifdef QUICKHULL_PARALLEL
-		// Modify input points to only be those to the left of the line
+	std::vector<Point *> left_points;
+	get_points_on_left_sequential(left_points, input_points, size, p1, p2);
+	//get_points_on_left_parallel(left_points, input_points, size, p1, p2);
+	// get_points_on_left_filter_parallel(left_points, input_points, size, p1, p2);
 
-		std::vector<Point *> left_points; // must copy (in parallel each subhull call will clear the other's list)
-		Vector ref_vector = form_zero_vector(*p1, *p2);
-		for(long long int i = 0; i < size; i++){
-			Vector test_vector = form_zero_vector(*p2, *input_points[i]);
-			if (cross_prod_orientation(ref_vector, test_vector)) {
-				left_points.push_back(input_points[i]);
-			}
-		}
-
-
-		// Update the convex hull
-		if(left_points.size() < 2){
-			// must update convex_hull atomically
-			if(left_points.size() == 1) {
-			    #pragma omp critical
-				{
-					convex_hull.push_back(left_points.at(0));
-				}
-
-			}
-	        #pragma omp critical
-			{
-				convex_hull.push_back(p1);
-			}
-		}
-		else{
-				Point* max_point;
-				Line line = get_line(*p1, *p2);
-
-				Dist_Info maxDistResult;
-				maxDistResult.index = 0;
-				maxDistResult.line_dist = 0.0;
-				maxDistResult.p1_dist = 0.0;
-				long long int index;
-
-				#pragma omp declare reduction \
-		        (maxDist:Dist_Info:omp_out=Dist_Max_Compare(omp_out, omp_in)) \
-		        initializer(omp_priv = neutral_distance())
-
-			    #pragma omp parallel for reduction(maxDist:maxDistResult)
-			    for(index = 0; index < left_points.size(); index++){
-					double distance = get_distance(line, *left_points.at(index));
-					if(maxDistResult.line_dist < distance){
-						maxDistResult.index = index;
-						maxDistResult.line_dist = distance;
-						maxDistResult.p1_dist = get_distance_point(*left_points.at(index), *p1);
-					}
-					else if(maxDistResult.line_dist == distance){
-						double distance_p1 = get_distance_point(*left_points.at(index), *p1);
-						if(distance_p1 < maxDistResult.p1_dist){
-							maxDistResult.index = index;
-							maxDistResult.p1_dist = distance_p1;
-						}
-					}
-				}
-				max_point = left_points.at(maxDistResult.index);
-
-			#pragma omp parallel sections
-			{
-				#pragma omp section
-				{
-					sub_hull(left_points.data(), left_points.size(), p1, max_point, convex_hull);
-				}
-				#pragma omp section
-				{
-					sub_hull(left_points.data(), left_points.size(), max_point, p2, convex_hull);
-				}
-			}
-		}
-
-	#else
-		// Modify input points to only be those to the left of the line
-		std::vector<Point *> left_points; // must copy (in parallel each subhull call will clear the other's list)
-		Vector ref_vector = form_zero_vector(*p1, *p2);
-
-		for(long long int i = 0; i < size; i++){
-			Vector test_vector = form_zero_vector(*p2, *input_points[i]);
-	        if (cross_prod_orientation(ref_vector, test_vector)) {
-				left_points.push_back(input_points[i]);
-	        }
-		}
-
-		if(left_points.size() < 2){
-			// must update convex_hull atomically
-			if(left_points.size() == 1) {
-				//std::cout << "Add to hull point: (" << left_points.at(0)->x << "," << left_points.at(0)->y << ")" << std::endl;
-				convex_hull.push_back(left_points.at(0));
-			}
-			// std::cout << "Add to hull point: (" << p1->x << "," << p1->y << ")" << std::endl;
-			convex_hull.push_back(p1);
-		}
-		else{
-			Line line = get_line(*p1, *p2);
-			double max_dist = 0;
-			double max_dist_p1 = 0;
-			Point* max_point;
-			for(long long int i = 0; i < left_points.size(); i++){
-				double distance = get_distance(line, *left_points.at(i));
-				if(max_dist < distance){
-					max_dist = distance;
-					max_dist_p1 = get_distance_point(*left_points.at(i), *p1);
-					max_point = left_points.at(i);
-				}
-				else if(max_dist == distance){
-					double value = get_distance_point(*left_points.at(i), *p1);
-					if(value < max_dist_p1){ // either > or < works (just want to break ties with a middle colinear point)
-						max_point = left_points.at(i);
-						max_dist_p1 = value;
-					}
-					std::cout << "found identical distance with point: x = " << left_points.at(i)->x << ", y = " << left_points.at(i)->y << std::endl;
-					std::cout << "line is a: " << line.a << ", b: " << line.b << ", c: " << line.c << std::endl;
-				}
-			}
-
-			sub_hull(left_points.data(), left_points.size(), p1, max_point, convex_hull);
-			sub_hull(left_points.data(), left_points.size(), max_point, p2, convex_hull);
-		}
-	#endif
-}
-
-void sub_hull_new(std::vector<Point *> &input_points, Point* p1, Point* p2, std::list<Point *> &convex_hull){
-	// Modify input points to only be those to the left of the line
-	std::vector<Point *> left_points; // must copy (in parallel each subhull call will clear the other's list)
-	Vector ref_vector = form_zero_vector(*p1, *p2);
-
-	// Sequential version is faster...Why is this???
-	// #ifdef QUICKHULL_PARALLEL
-	// #pragma omp parallel for schedule(static)
-	// #endif
-	for(long long int i = 0; i < input_points.size(); i++){
-		Vector test_vector = form_zero_vector(*p2, *input_points.at(i));
-        if (cross_prod_orientation(ref_vector, test_vector)) {
-        	// #ifdef QUICKHULL_PARALLEL
-        	 //#pragma omp critical
-        	// #endif
-			{
-				left_points.push_back(input_points.at(i));
-			}
-        }
-	}
-
-	// See great resource at: https://www.py4u.net/discuss/63446
-
-	// Option 1: use merge reduction (same as option 2)
-	// #pragma omp declare reduction (merge : std::vector<Point *> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
-	// #pragma omp parallel for reduction(merge: left_points)
-	// for(long long int i=0; i < input_points.size(); i++) {
-	// 	Vector test_vector = form_zero_vector(*p2, *input_points.at(i));
-    //     if (cross_prod_orientation(ref_vector, test_vector)) {
-	// 		left_points.push_back(input_points.at(i));
-	// 	}
-	//
-	// }
-
-	// Option 2: use private copy and merge at end
-	// #pragma omp parallel
-	// {
-	//     std::vector<Point *> vec_private;
-	// 	Vector test_vector;
-	//     #pragma omp for nowait //fill vec_private in parallel
-	//     for(int i=0; i < input_points.size(); i++) {
-	// 		test_vector = form_zero_vector(*p2, *input_points.at(i));
-	// 		if (cross_prod_orientation(ref_vector, test_vector)) {
-	// 			vec_private.push_back(input_points.at(i));
-	// 		}
-	//     }
-	//     #pragma omp critical
-	//     left_points.insert(left_points.end(), vec_private.begin(), vec_private.end());
-	// }
-
-
-
-	//std::cout << "left_points.size(): " << left_points.size() << std::endl;
-
-	// Update the convex hull
-	if(left_points.size() < 2){
-
-		// must update convex_hull atomically
+	if(left_points.size() < 2){ // 0 or 1 points on left, then do combine step
 		if(left_points.size() == 1) {
-			#ifdef QUICKHULL_PARALLEL
 		    #pragma omp critical
-		    #endif
-			{
-				//std::cout << "Add to hull point: (" << left_points.at(0)->x << "," << left_points.at(0)->y << ")" << std::endl;
-				convex_hull.push_back(left_points.at(0));
-			}
-
+			convex_hull.push_back(left_points.at(0)); // Atomic update convex_hull
 		}
-		#ifdef QUICKHULL_PARALLEL
         #pragma omp critical
-        #endif
-		{
-			// std::cout << "Add to hull point: (" << p1->x << "," << p1->y << ")" << std::endl;
-			convex_hull.push_back(p1);
-		}
+		convex_hull.push_back(p1);
 	}
-	else{
+	else{ // do divide step
+		Point* max_point;
+		get_max_dist_parallel(left_points, &max_point, p1, p2);
 
-
-		#ifdef QUICKHULL_PARALLEL
-			Point* max_point;
-			Line line = get_line(*p1, *p2);
-
-			Dist_Info maxDistResult;
-			maxDistResult.index = 0;
-			maxDistResult.line_dist = 0.0;
-			maxDistResult.p1_dist = 0.0;
-			long long int index;
-
-			#pragma omp declare reduction \
-	        (maxDist:Dist_Info:omp_out=Dist_Max_Compare(omp_out, omp_in)) \
-	        initializer(omp_priv = neutral_distance())
-
-		    #pragma omp parallel for reduction(maxDist:maxDistResult)
-		    for(index = 0; index < left_points.size(); index++){
-				double distance = get_distance(line, *left_points.at(index));
-				if(maxDistResult.line_dist < distance){
-					maxDistResult.index = index;
-					maxDistResult.line_dist = distance;
-					maxDistResult.p1_dist = get_distance_point(*left_points.at(index), *p1);
-				}
-				else if(maxDistResult.line_dist == distance){
-					double distance_p1 = get_distance_point(*left_points.at(index), *p1);
-					if(distance_p1 < maxDistResult.p1_dist){
-						maxDistResult.index = index;
-						maxDistResult.p1_dist = distance_p1;
-					}
-				}
-			}
-			max_point = left_points.at(maxDistResult.index);
-
-		#else
-			Line line = get_line(*p1, *p2);
-			double max_dist = 0;
-			double max_dist_p1 = 0;
-			Point* max_point;
-			for(long long int i = 0; i < left_points.size(); i++){
-				double distance = get_distance(line, *left_points.at(i));
-				if(max_dist < distance){
-					max_dist = distance;
-					max_dist_p1 = get_distance_point(*left_points.at(i), *p1);
-					max_point = left_points.at(i);
-				}
-				else if(max_dist == distance){
-					double value = get_distance_point(*left_points.at(i), *p1);
-					if(value < max_dist_p1){ // either > or < works (just want to break ties with a middle colinear point)
-						max_point = left_points.at(i);
-						max_dist_p1 = value;
-					}
-					std::cout << "found identical distance with point: x = " << left_points.at(i)->x << ", y = " << left_points.at(i)->y << std::endl;
-					std::cout << "line is a: " << line.a << ", b: " << line.b << ", c: " << line.c << std::endl;
-				}
-			}
-		#endif
-
-
-		#ifdef QUICKHULL_PARALLEL
 		#pragma omp parallel sections
 		{
 			#pragma omp section
 			{
-				#endif
-				sub_hull_new(left_points, p1, max_point, convex_hull);
-				#ifdef QUICKHULL_PARALLEL
+				sub_hull(left_points.data(), left_points.size(), p1, max_point, convex_hull);
 			}
 			#pragma omp section
 			{
-				#endif
-				sub_hull_new(left_points, max_point, p2, convex_hull);
-				#ifdef QUICKHULL_PARALLEL
+				sub_hull(left_points.data(), left_points.size(), max_point, p2, convex_hull);
 			}
 		}
-		#endif
-
-
-		// #pragma omp parallel default(none) shared(left_points, p1, p2, max_point, convex_hull)
-		// {
-		// 	#pragma omp single
-		// 	{
-		// 		#pragma omp task //shared(left_points, p1, max_point, convex_hull)
-		// 		sub_hull_new(left_points, p1, max_point, convex_hull);
-		// 		#pragma omp task //shared(left_points, p2, max_point, convex_hull)
-		// 		sub_hull_new(left_points, max_point, p2, convex_hull);
-		// 	}
-		// }
-
 	}
 }

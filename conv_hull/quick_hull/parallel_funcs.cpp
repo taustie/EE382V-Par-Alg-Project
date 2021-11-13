@@ -157,3 +157,75 @@ void get_max_dist_parallel(std::vector<Point *> &left_points, Point** max, Point
 
 	*max = left_points.at(maxDistResult.index);
 }
+
+void get_points_on_left_parallel(std::vector<Point *> &left_points, Point ** input_points, int size, Point* p1, Point* p2){
+	Vector ref_vector = form_zero_vector(*p1, *p2);
+	// Option 1: See great resource at: https://www.py4u.net/discuss/63446
+	#pragma omp declare reduction (merge : std::vector<Point *> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
+	#pragma omp parallel for reduction(merge: left_points)
+	for(long long int i=0; i < size; i++) {
+		Vector test_vector = form_zero_vector(*p2, *input_points[i]);
+        if (cross_prod_orientation(ref_vector, test_vector)) {
+			left_points.push_back(input_points[i]);
+		}
+	}
+
+	// Option 2: use private copy and merge at end
+	// #pragma omp parallel
+	// {
+	//     std::vector<Point *> vec_private; // fill vec_private in parallel
+	// 	Vector test_vector;
+	//     #pragma omp for nowait
+	//     for(int i=0; i < size; i++) {
+	// 		test_vector = form_zero_vector(*p2, *input_points[i]);
+	// 		if (cross_prod_orientation(ref_vector, test_vector)) {
+	// 			vec_private.push_back(input_points[i]);
+	// 		}
+	//     }
+	//     #pragma omp critical
+	//     left_points.insert(left_points.end(), vec_private.begin(), vec_private.end());
+	// }
+}
+
+
+// void get_points_on_left_filter_parallel(std::vector<Point *> &left_points, Point ** input_points, int size, Point* p1, Point* p2){
+// 	//prefix sum using array
+// 	Vector ref_vector = form_zero_vector(*p1, *p2);
+// 	int * left_points_filter = new int[size];
+// 	int * left_points_result = new int[size];
+//
+// 	#pragma omp parallel for schedule(static)
+// 	for(int k = 0; k < size; k++){
+// 		Vector test_vector = form_zero_vector(*p2, *input_points[k]);
+// 		if(cross_prod_orientation(ref_vector, test_vector)){
+// 			left_points_filter[k] = 1;
+// 		}
+// 		else{
+// 			left_points_filter[k] = 0;
+// 		}
+// 	}
+//
+// 	int x = 0;
+// 	#pragma omp parallel for simd reduction(inscan,+: x)
+// 	for (int k = 0; k < size; k++) {
+// 		x += left_points_filter[k];
+// 		#pragma omp scan inclusive(x)
+// 		left_points_result[k] = x;
+// 	}
+//
+// 	int new_size = left_points_result[size - 1];
+// 	Point ** left_points_arr = new Point *[new_size];
+//
+// 	#pragma omp parallel for schedule(static)
+// 	for(int i = 0; i < size; i++){
+// 		if(left_points_filter[i] == 1){
+// 			//std::cout << "index left_points_result.at(i): " << left_points_result.at(i) - 1 << std::endl;
+// 			left_points_arr[left_points_result[i] - 1] = input_points[i];
+// 		}
+// 	}
+//
+// 	delete[] left_points_filter;
+// 	delete[] left_points_result;
+// 	left_points.assign(left_points_arr, left_points_arr + new_size);
+// 	delete[] left_points_arr;
+// }

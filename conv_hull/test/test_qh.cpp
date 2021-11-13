@@ -46,7 +46,7 @@ void manual_test(void){
 	tmp = new Point; tmp->x = -5; tmp->y = 6; input_points.push_back(tmp);
 
 	write_input(input_points);
-	quick_hull_new(input_points, output_points);
+	quick_hull(input_points, output_points);
 	write_output(output_points);
 
 	verify_convex_hull(input_points, output_points);
@@ -77,7 +77,7 @@ void unit_test(){
 
 	write_input(input_points);
 	auto t1 = std::chrono::high_resolution_clock::now();
-	quick_hull_new(input_points, output_points);
+	quick_hull(input_points, output_points);
 	auto t2 = std::chrono::high_resolution_clock::now();
 	auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
 	std::chrono::duration<double> ms_double = t2 - t1;
@@ -122,7 +122,7 @@ void circular_polygon(){
 
 	write_input(input_points);
 	auto t1 = std::chrono::high_resolution_clock::now();
-	quick_hull_new(input_points, output_points);
+	quick_hull(input_points, output_points);
 	auto t2 = std::chrono::high_resolution_clock::now();
 	auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
 	std::chrono::duration<double> ms_double = t2 - t1;
@@ -140,7 +140,7 @@ void benchmark_square_exp_test(void){
 	std::cout << "Benchmark Square Exponential Sweep Test:" << std::endl;
 	int repeat_count = 1;
 	std::cout << "\trepeat_count: " << repeat_count << std::endl;
-	for(int element_count = 1000; element_count <= 100000000; element_count*=10){
+	for(int element_count = 100; element_count <= 100000000; element_count*=10){
 		std::cout << "\tNumber of inputs: " << element_count << std::endl;
 		for(int i = 0; i < repeat_count; i++){
 			std::vector<Point *> input_points;
@@ -157,7 +157,7 @@ void benchmark_square_exp_test(void){
 			}
 
 			auto t1 = std::chrono::high_resolution_clock::now();
-			quick_hull_new(input_points, output_points);
+			quick_hull(input_points, output_points);
 			auto t2 = std::chrono::high_resolution_clock::now();
 			auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
 			std::chrono::duration<double> ms_double = t2 - t1;
@@ -177,7 +177,7 @@ void benchmark_circular_exp_test(void){
 	std::cout << "Benchmark Circular Exponential Sweep Test:" << std::endl;
 	int repeat_count = 1;
 	std::cout << "\trepeat_count: " << repeat_count << std::endl;
-	for(int element_count = 1000; element_count <= 100000000; element_count*=10){
+	for(int element_count = 100; element_count <= 100000000; element_count*=10){
 		std::cout << "\tNumber of inputs: " << element_count << std::endl;
 		for(int i = 0; i < repeat_count; i++){
 			std::vector<Point *> input_points;
@@ -204,7 +204,7 @@ void benchmark_circular_exp_test(void){
 			}
 
 			auto t1 = std::chrono::high_resolution_clock::now();
-			quick_hull_new(input_points, output_points);
+			quick_hull(input_points, output_points);
 			auto t2 = std::chrono::high_resolution_clock::now();
 			auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
 			std::chrono::duration<double> ms_double = t2 - t1;
@@ -241,7 +241,7 @@ void benchmark_square_linear_test(void){
 			}
 
 			auto t1 = std::chrono::high_resolution_clock::now();
-			quick_hull_new(input_points, output_points);
+			quick_hull(input_points, output_points);
 			auto t2 = std::chrono::high_resolution_clock::now();
 			auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
 			std::chrono::duration<double> ms_double = t2 - t1;
@@ -288,7 +288,7 @@ void benchmark_circular_linear_test(void){
 			}
 
 			auto t1 = std::chrono::high_resolution_clock::now();
-			quick_hull_new(input_points, output_points);
+			quick_hull(input_points, output_points);
 			auto t2 = std::chrono::high_resolution_clock::now();
 			auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
 			std::chrono::duration<double> ms_double = t2 - t1;
@@ -333,7 +333,7 @@ void poor_mans_profile(){
 	}
 
 	auto t1 = std::chrono::high_resolution_clock::now();
-	quick_hull_new(input_points, output_points);
+	quick_hull(input_points, output_points);
 	auto t2 = std::chrono::high_resolution_clock::now();
 	auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
 	std::chrono::duration<double> ms_double = t2 - t1;
@@ -346,8 +346,8 @@ void poor_mans_profile(){
 
 int main() {
 	// to visualize & verify algorithm correctness:
-	manual_test();
-	// unit_test();
+	// manual_test();
+	unit_test();
 	// circular_polygon();
 
 	// to benchmark the algorithm:
