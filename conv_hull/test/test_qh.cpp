@@ -63,7 +63,7 @@ void unit_test(){
 
 	srand(time(NULL));
 	int element_count = 10000000;
-	std::cout << "QuickHull unit test 1:" << std::endl;
+	std::cout << "QuickHull unit test:" << std::endl;
 	std::cout << "\tnumber of inputs: " << element_count << std::endl;
 	std::cout << "\tusing random values between 0 and " << my_rand_max << std::endl;
 	for(int i = 0; i < element_count; i++){

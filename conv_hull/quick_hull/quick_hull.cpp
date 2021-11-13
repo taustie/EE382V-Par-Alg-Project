@@ -53,8 +53,11 @@ bool cross_prod_orientation(Vector v1, Vector v2){
 }
 
 void quick_hull(std::vector<Point *> &input_points, std::list<Point *> &convex_hull){
-	int threads = 4;
-	omp_set_num_threads(threads);
+	int threads = 2; // must be init to > 1
+	omp_set_nested(1);
+    if (omp_get_nested() != 1) {
+        std::cout << "OMP_NESTED is FALSE!" << std::endl;
+    }
 
 	// Identify min and max
 	Point* min_point = input_points.at(0);
@@ -62,15 +65,15 @@ void quick_hull(std::vector<Point *> &input_points, std::list<Point *> &convex_h
 
 	get_max_min_points_parallel(input_points, &max_point, &min_point);
 
-	std::cout << "min point: (" << min_point->x << "," << min_point->y << ")" << std::endl;
-	std::cout << "max point: (" << max_point->x << "," << max_point->y << ")" << std::endl;
+//	std::cout << "min point: (" << min_point->x << "," << min_point->y << ")" << std::endl;
+//	std::cout << "max point: (" << max_point->x << "," << max_point->y << ")" << std::endl;
 	
 	if(threads > 1){
 		#pragma omp parallel
 		{
-			std::cout << "from quick_hull" << std::endl;
 			#pragma omp single nowait
 			{
+				threads = omp_get_num_threads();
 				#pragma omp task shared(convex_hull)
 				{
 					sub_hull_par(threads/2, input_points.data(), input_points.size(), min_point, max_point, convex_hull);
@@ -79,10 +82,12 @@ void quick_hull(std::vector<Point *> &input_points, std::list<Point *> &convex_h
 				{
 					sub_hull_par(threads/2, input_points.data(), input_points.size(), max_point, min_point, convex_hull);
 				}
+				std::cout << "\tthread count: " << threads << std::endl;
 			} // don't have a double barrier - which is expensive
 		}
 	}
 	else{
+		std::cout << "\tthread count: 1" << std::endl;
 		sub_hull_seq(input_points.data(), input_points.size(), min_point, max_point, convex_hull);
 		sub_hull_seq(input_points.data(), input_points.size(), max_point, min_point, convex_hull);
 	}
@@ -149,8 +154,8 @@ void sub_hull_seq(Point ** input_points, int size, Point* p1, Point* p2, std::li
 void sub_hull_par(int threads, Point ** input_points, int size, Point* p1, Point* p2, std::list<Point *> &convex_hull){
 	//std::cout << "size = " << size << std::endl;
 	std::vector<Point *> left_points;
-	get_points_on_left_sequential(left_points, input_points, size, p1, p2);
-	//get_points_on_left_parallel(left_points, input_points, size, p1, p2);
+	//get_points_on_left_sequential(left_points, input_points, size, p1, p2);
+	get_points_on_left_parallel(left_points, input_points, size, p1, p2);
 	// get_points_on_left_filter_parallel(left_points, input_points, size, p1, p2);
 
 	if(left_points.size() < 2){ // 0 or 1 points on left, then do combine step
