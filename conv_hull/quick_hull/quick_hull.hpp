@@ -27,4 +27,7 @@ bool cross_prod_orientation(Vector v1, Vector v2);
 void quick_hull(std::vector<Point *> &input_points, std::list<Point *> &convex_hull);
 void sub_hull(Point ** input_points, int size, Point* p1, Point* p2, std::list<Point *> &convex_hull);
 
+void sub_hull_par(int threads, Point ** input_points, int size, Point* p1, Point* p2, std::list<Point *> &convex_hull);
+void sub_hull_seq(Point ** input_points, int size, Point* p1, Point* p2, std::list<Point *> &convex_hull);
+
 #endif
