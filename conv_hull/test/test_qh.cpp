@@ -62,7 +62,7 @@ void unit_test(){
 	std::list<Point *> output_points;
 
 	srand(time(NULL));
-	int element_count = 10000000;
+	int element_count = 10000;
 	std::cout << "QuickHull unit test:" << std::endl;
 	std::cout << "\tnumber of inputs: " << element_count << std::endl;
 	std::cout << "\tusing random values between 0 and " << my_rand_max << std::endl;
@@ -96,7 +96,7 @@ void circular_polygon(){
 	std::list<Point *> output_points;
 
 	srand(time(NULL));
-	int element_count = 1000000;
+	int element_count = 10000;
 	std::cout << "Circular Polygon:" << std::endl;
 	std::cout << "\tnumber of inputs: " << element_count << std::endl;
 	std::cout << "\tusing random values between 0 and " << my_rand_max << std::endl;
@@ -346,8 +346,8 @@ void poor_mans_profile(){
 
 int main() {
 	// to visualize & verify algorithm correctness:
-	// manual_test();
-	unit_test();
+	manual_test();
+	//unit_test();
 	// circular_polygon();
 
 	// to benchmark the algorithm:
