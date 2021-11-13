@@ -2,277 +2,442 @@
 #include <cmath>
 #include <vector>
 #include <omp.h>
+#include <algorithm>
 #include <chrono>
 #include <random>
-#include <algorithm>
-using namespace std::chrono;
+
+// #include "./utils.hpp"
+
 using namespace std;
+using namespace std::chrono;
 
 pair<int, int> mid;
 
-int find_quad(pair<int, int> p)
+
+
+
+
+
+
+
+
+int quad(pair<int, int> p)
 {
 	if (p.first >= 0 && p.second >= 0)
-    {
-        return 1;
-    }
+		return 1;
 	if (p.first <= 0 && p.second >= 0)
-    {
-        return 2;
-    }
-
+		return 2;
 	if (p.first <= 0 && p.second <= 0)
-    {
-        return 3;
-    }
+		return 3;
 	return 4;
 }
 
-// Checks whether the line is crossing the polygon
-int orientation(pair<int, int> a, pair<int, int> b, pair<int, int> c)
+int orientation(pair<int, int> a, pair<int, int> b,
+				pair<int, int> c)
 {
-	int res = (b.second-a.second)*(c.first-b.first) - (c.second-b.second)*(b.first-a.first);
+	int res = (b.second-a.second)*(c.first-b.first) -
+			(c.second-b.second)*(b.first-a.first);
+			
 
 	if (res == 0)
-    {
-        return 0;
-    }
-	else if (res > 0)
-    {
-        return 1;
-    }
+		return 0;
+	if (res > 0)
+		return 1;
 	return -1;
 }
 
-// compare function for sorting
-bool compare_points(pair<int, int> p1, pair<int, int> q1)
+double dis(pair<int, int> p1, pair<int, int> p2)
 {
-    int new_p1_x = p1.first - mid.first, new_p1_y = p1.second - mid.second;
-    int new_p2_x = q1.first - mid.first, new_p2_y = q1.second - mid.second;
-	pair<int, int> p = make_pair(new_p1_x, new_p1_y);
-	pair<int, int> q = make_pair(new_p2_x, new_p2_y);
+	return (p1.first - p2.first)*(p1.first - p2.first) + (p1.second - p2.second)*(p1.second - p2.second);
+}
 
-	int one = find_quad(p);
-	int two = find_quad(q);
+int calc_right_m(vector<pair<int, int>> a)
+{
+	int n = a.size();
+	int ia = 0;
+	for (int i=1; i<n; i++)
+		if (a[i].first > a[ia].first)
+			ia = i;
+	return ia;
+}
+
+
+int calc_left_m(vector<pair<int, int>> a)
+{
+	int n = a.size();
+	int ia = 0;
+	for (int i=1; i<n; i++)
+		if (a[i].first < a[ia].first)
+			ia = i;
+	return ia;
+}
+
+
+vector<pair<int, int>> fill_vector(vector<pair<int, int>> src)
+{
+    vector<pair<int, int>> des;
+    size_t *prefix;
+    #pragma omp parallel
+    {
+        int ithread  = omp_get_thread_num();
+        int nthreads = omp_get_num_threads();
+        #pragma omp single
+        {
+            prefix = new size_t[nthreads+1];
+            prefix[0] = 0;
+        }
+        vector<pair<int, int>> vec_private;
+        #pragma omp for schedule(static) nowait
+        for(int i=0; i<src.size(); i++) {
+            vec_private.push_back(src[i]);
+        }
+
+        prefix[ithread+1] = vec_private.size();
+        #pragma omp barrier
+        #pragma omp single 
+        {
+            for(int i=1; i<(nthreads+1); i++)
+            {
+                prefix[i] += prefix[i-1];
+            }
+            des.resize(des.size() + prefix[nthreads]);
+        }
+        copy(vec_private.begin(), vec_private.end(), des.begin() + prefix[ithread]);
+    }
+    delete[] prefix;
+
+    return des;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+bool compare(pair<int, int> p1, pair<int, int> q1)
+{
+	pair<int, int> p = make_pair(p1.first - mid.first, p1.second - mid.second);
+	pair<int, int> q = make_pair(q1.first - mid.first, q1.second - mid.second);
+
+	int one = quad(p);
+	int two = quad(q);
 
 	if (one != two)
     {
         return (one < two);
-    } else {
-        return (q.second*p.first > p.second*q.first);
     }
+	return (p.second*q.first < q.second*p.first);
+}
 
+pair<pair<int, int>, pair<int, int>> calculate_upper_tangent(vector<pair<int, int>> a, vector<pair<int, int>> b)
+{
+	int n1 = a.size(), n2 = b.size();
+	int ia = calc_right_m(a), ib = calc_left_m(b);
+
+	int inda = ia, indb = ib;
+	bool done = 0;
+	while (!done)
+	{
+        cout << "in while" << endl;
+		done = 1;
+		while (orientation(b[indb], a[inda], a[(inda+1)%n1]) >= 0)
+		{
+            cout << "in while" << endl;
+			if(orientation(b[indb], a[inda], a[(inda+1)%n1]) == 0)
+			{
+				if(n1 == 1)
+				{
+					break;
+				} else
+				{
+					if(dis(a[inda], b[indb]) > dis(a[(inda+1)%n1], b[indb]))
+					{
+						break;
+					}
+					inda = (inda + 1) % n1;
+				}
+			} else
+			{
+				inda = (inda + 1) % n1;
+			}
+		}
+			
+		while (orientation(a[inda], b[indb], b[(n2+indb-1)%n2]) <= 0)
+		{
+            cout << "in while" << endl;
+			if(orientation(a[inda], b[indb], b[(n2+indb-1)%n2]) == 0)
+			{
+				if(n2 == 1)
+				{
+					break;
+				} else
+				{
+					if(dis(a[inda], b[indb]) > dis(a[inda], b[(n2+indb-1)%n2]))
+					{
+						break;
+					}
+					indb = (n2+indb-1)%n2;
+					done = 0;
+				}
+			} else
+			{
+				indb = (n2+indb-1)%n2;
+			}
+
+			done = 0;
+		}
+	}
+	pair<int, int> point1 = {a[inda].first, a[inda].second};
+	pair<int, int> point2 = {b[indb].first, b[indb].second};
+	pair<pair<int, int>, pair<int, int>> tangent = {point1, point2};
+	return tangent;
+}
+
+pair<pair<int, int>, pair<int, int>> calculate_lower_tangent(vector<pair<int, int>> a, vector<pair<int, int>> b)
+{
+	int n1 = a.size(), n2 = b.size();
+	int ia = calc_right_m(a), ib = calc_left_m(b);
+
+	int inda = ia, indb = ib;
+	bool done = 0;
+	while (!done)
+	{
+        cout << "in while" << endl;
+		done = 1;
+		while (orientation(a[inda], b[indb], b[(indb+1)%n2])>= 0)
+		{
+            cout << "in while" << endl;
+			if(orientation(a[inda], b[indb], b[(indb+1)%n2]) == 0)
+			{
+				if(n2 == 1)
+				{
+					break;
+				} else
+				{
+					if(dis(a[inda], b[indb]) > dis(a[inda], b[(indb+1)%n2]))
+					{
+						break;
+					}
+					indb=(indb+1)%n2;
+				}
+			} else
+			{
+				indb=(indb+1)%n2;
+			}
+		}
+			
+
+		while (orientation(b[indb], a[inda], a[(n1+inda-1)%n1]) <= 0)
+		{
+            cout << "in while" << endl;
+			if(orientation(b[indb], a[inda], a[(n1+inda-1)%n1]) == 0)
+			{
+				if(n1 == 1)
+				{
+					break;
+				} else
+				{
+					if(dis(a[inda], b[indb]) > dis(a[(n1+inda-1)%n1], b[indb]))
+					{
+						break;
+					}
+					inda=(n1+inda-1)%n1;
+				}
+			} else
+			{
+				inda=(n1+inda-1)%n1;
+				
+			}
+			done=0;
+		}
+	}
+	pair<int, int> point1 = {a[inda].first, a[inda].second};
+	pair<int, int> point2 = {b[indb].first, b[indb].second};
+	pair<pair<int, int>, pair<int, int>> tangent = {point1, point2};
+	return tangent;
 }
 
 vector<pair<int, int>> merge_hulls(vector<pair<int, int>> a, vector<pair<int, int>> b)
 {
-	// n1 -> number of points in polygon a
-	// n2 -> number of points in polygon b
 	int n1 = a.size(), n2 = b.size();
+	// vector<pair<int, int>> ua, ub, la, lb;
+    // ua = fill_vector(a);
+    // la = fill_vector(a);
+    // ub = fill_vector(b);
+    // lb = fill_vector(b);
+    // cout << la.size() << endl;
+    pair<pair<int, int>, pair<int, int>> tu;
+	pair<pair<int, int>, pair<int, int>> tl;
 
-	int right_m = 0, left_m = 0;
-	for (int i=1; i<n1; i++)
+    #pragma omp parallel sections
     {
-        if (a[i].first > a[right_m].first)
-        {
-            right_m = i;
-        }
-    }
-		
+        #pragma omp section
+        tu = calculate_upper_tangent(a, b);
 
-	// ib -> leftmost point of b
-	for (int i=1; i<n2; i++)
-    {
-		if (b[i].first < b[left_m].first)
-        {
-			left_m=i;
-        }
+        #pragma omp section
+        tl = calculate_lower_tangent(a, b);
     }
-	// finding the upper tangent
 	
-    int uppera, upperb, lowera, lowerb;
+	vector<pair<int, int>> ret;
 	
-    
+	pair<int, int> uppera = tu.first, upperb = tu.second;
+	pair<int, int> lowera = tl.first, lowerb = tl.second;
+
     #pragma omp parallel sections
     {
         #pragma omp section
         {
-            int curr_l = right_m, curr_r = left_m;
-            bool crosses = 1;
-            while (crosses)
+            int ind = 0;
+            while(a[ind].first != uppera.first && a[ind].second != uppera.second)
             {
-                crosses = 0;
-                while (orientation(b[curr_r], a[curr_l], a[(curr_l+1)%n1]) >=0)
-                {
-                    curr_l = (curr_l + 1) % n1;
-                }
-                    
-
-                while (orientation(a[curr_l], b[curr_r], b[(n2+curr_r-1)%n2]) <=0)
-                {
-                    curr_r = (n2+curr_r-1)%n2;
-                    crosses = 1;
-                }
+                ind = (ind + 1) % n1;
             }
-            uppera = curr_l;
-            upperb = curr_r;
+            ret.push_back(a[ind]);
+
+            while(a[ind].first != lowera.first && a[ind].second != lowera.second)
+            {
+                ind = (ind + 1) % n1;
+                ret.push_back(a[ind]);
+            }
+            ret.push_back(a[ind]);
         }
 
         #pragma omp section
         {
-            int curr_l = right_m, curr_r = left_m;
-            bool crosses1 = 1;
-            while (crosses1)
+            int ind = 0;
+
+            while(b[ind].first != lowerb.first && b[ind].second != lowerb.second)
             {
-                crosses1 = 0;
-                while (orientation(a[curr_l], b[curr_r], b[(curr_r+1)%n2])>=0)
-                {
-                    curr_r=(curr_r+1)%n2;
-                }
-                while (orientation(b[curr_r], a[curr_l], a[(n1+curr_l-1)%n1])<=0)
-                {
-                    curr_l=(n1+curr_l-1)%n1;
-                    crosses1 = 1;
-                }
+                ind = (ind + 1) % n2;
             }
-            lowera = curr_l;
-            lowerb = curr_r;
+            ret.push_back(b[ind]);
+
+            while(b[ind].first != upperb.first && b[ind].second != upperb.second)
+            {
+                ind = (ind + 1) % n2;
+                ret.push_back(b[ind]);
+            }
+            ret.push_back(b[ind]);
         }
+
     }
-
-	vector<pair<int, int>> ret;
-
-	int ind = uppera;
-	ret.push_back(a[uppera]);
-	while (ind != lowera)
-	{
-		ind = (ind+1)%n1;
-		ret.push_back(a[ind]);
-	}
-
-	ind = lowerb;
-	ret.push_back(b[lowerb]);
-	while (ind != upperb)
-	{
-		ind = (ind+1)%n2;
-		ret.push_back(b[ind]);
-	}
 	return ret;
 
 }
 
-vector<pair<int, int>> brute_force(vector<pair<int, int>> points)
+vector<pair<int, int>> find_convex_hull_brute(vector<pair<int, int>> a)
 {
 	vector<pair<int, int>> convex_hull;
 
-	for (int p1=0; p1<points.size(); p1++)
+	for (int i=0; i<a.size(); i++)
 	{
-		for (int p2=p1+1; p2<points.size(); p2++)
+		for (int j=i+1; j<a.size(); j++)
 		{
-			int x1 = points[p1].first, x2 = points[p2].first;
-			int y1 = points[p1].second, y2 = points[p2].second;
+			int x1 = a[i].first, x2 = a[j].first;
+			int y1 = a[i].second, y2 = a[j].second;
 
-			int a = y1-y2;
-			int b = x2-x1;
-			int c = x1*y2-y1*x2;
+			int a1 = y1-y2;
+			int b1 = x2-x1;
+			int c1 = x1*y2-y1*x2;
 			int pos = 0, neg = 0;
-			for (int k = 0; k < points.size(); k++)
+			for (int k=0; k<a.size(); k++)
 			{
-                if (a*points[k].first+b*points[k].second+c >= 0)
-                {
-                    pos++;
-                }
-				if (a*points[k].first+b*points[k].second+c <= 0)
-                {
-                    neg++;
-                }
+				if (a1*a[k].first+b1*a[k].second+c1 <= 0)
+					neg++;
+				if (a1*a[k].first+b1*a[k].second+c1 >= 0)
+					pos++;
 			}
-			if (pos == points.size() || neg == points.size())
+			if (pos == a.size() || neg == a.size())
 			{
-				convex_hull.push_back(points[p1]);
-				convex_hull.push_back(points[p2]);
+				convex_hull.push_back(a[i]);
+				convex_hull.push_back(a[j]);
 			}
 		}
 	}
 
-	// Geeks for geeks
-	pair<int, int> mid = {0, 0};
-	int len = convex_hull.size();
-	for (int i=0; i < len; i++)
+	mid = {0, 0};
+	int n = convex_hull.size();
+	for (int i=0; i<n; i++)
 	{
 		mid.first += convex_hull[i].first;
 		mid.second += convex_hull[i].second;
-		convex_hull[i].first *= len;
-		convex_hull[i].second *= len;
+		convex_hull[i].first *= n;
+		convex_hull[i].second *= n;
 	}
-	sort(convex_hull.begin(), convex_hull.end(), compare_points);
-
-    #pragma omp parallel
+	sort(convex_hull.begin(), convex_hull.end(), compare);
+	for (int i=0; i<n; i++)
     {
-        #pragma omp for
-        for (int i=0; i < len; i++)
-        {
-            int new_x = convex_hull[i].first/len;
-            int new_y = convex_hull[i].second/len;
-            convex_hull[i] = make_pair(new_x, new_y);
-        }
+        convex_hull[i] = make_pair(convex_hull[i].first/n, convex_hull[i].second/n);
     }
 
 	return convex_hull;
 }
 
-vector<pair<int, int>> convex_hull_par(vector<pair<int, int>> points)
+vector<pair<int, int>> find_convex_hull(vector<pair<int, int>> a)
 {
-	if (points.size() <= 5)
-    {
-        return brute_force(points);
-    }
 
-    vector<pair<int, int>> left, right;
-    int mid = points.size()/2;
-    #pragma omp parallel
+	if (a.size() < 6)
     {
-        vector<pair<int, int>> left_temp;
-        #pragma omp for nowait schedule(static)
-        for (int i = 0; i < mid; i++) {
-            left_temp.push_back(points[i]);
-        }
-        #pragma omp for schedule(static) ordered
-        for(int i=0; i < omp_get_num_threads(); i++) {
-            #pragma omp ordered
-            left.insert(left.end(), left_temp.begin(), left_temp.end());
-        }
+        return find_convex_hull_brute(a);
     }
+		
 
-    #pragma omp parallel
+	vector<pair<int, int>>left, right;
+	for (int i=0; i<a.size()/2; i++)
     {
-        vector<pair<int, int>> right_temp;
-        #pragma omp for nowait schedule(static)
-        for (int i = mid; i < points.size(); i++) {
-            right_temp.push_back(points[i]);
-        }
-        #pragma omp for schedule(static) ordered
-        for(int i=0; i < omp_get_num_threads(); i++) {
-            #pragma omp ordered
-            right.insert(right.end(), right_temp.begin(), right_temp.end());
-        }
+        left.push_back(a[i]);
     }
+		
+	for (int i=a.size()/2; i<a.size(); i++)
+    {
+        right.push_back(a[i]);
+    }
+		
 
     vector<pair<int, int>>left_hull;
     vector<pair<int, int>>right_hull;
+    
     #pragma omp parallel sections
     {
         #pragma omp section
-        {
-            left_hull = convex_hull_par(left);
-        }
+        left_hull = find_convex_hull(left);
 
         #pragma omp section
-        {
-            right_hull = convex_hull_par(right);
-        }
-
+        right_hull = find_convex_hull(right);
     }
-
 	return merge_hulls(left_hull, right_hull);
+}
+
+int main( int argc, char* argv[] )
+{ 
+    omp_set_num_threads(2);
+    omp_set_nested(1);
+    std::random_device rd;
+	std::mt19937 rng(rd());
+	std::uniform_int_distribution<int> uni(-100, 100);
+    vector<pair<int, int>> points;
+	for(int i = 0; i < 1000; i++)
+    {
+		auto random_integer = uni(rng);
+		int x = (int)random_integer;
+		random_integer = uni(rng);
+		int y = (int)random_integer;
+		points.push_back(make_pair(x, y));
+	}
+
+
+    sort(points.begin(), points.end());
+    auto start = high_resolution_clock::now();
+    vector<pair<int, int>> final_hull = find_convex_hull(points);
+    cout << final_hull.size() << endl;
+    auto end = high_resolution_clock::now();
+	auto duration = duration_cast<microseconds>(end - start);
+	cout << duration.count() << endl;
+    return 0;
 }
