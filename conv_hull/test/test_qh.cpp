@@ -135,6 +135,48 @@ void circular_polygon(){
 	}
 }
 
+void benchmark_static_circular(){
+	std::vector<Point *> input_points;
+	std::list<Point *> output_points;
+
+	srand(time(NULL));
+	int element_count = 100000000;
+	std::cout << "Benchmark Static Circular:" << std::endl;
+	std::cout << "\tnumber of inputs: " << element_count << std::endl;
+	std::cout << "\tusing random values between 0 and " << my_rand_max << std::endl;
+	for(int i = 0; i < element_count; i++){
+		Point * tmp = new Point;
+		int value = (rand() % (my_rand_max/2));
+		tmp->x = value;
+		// Technique to prevent overflow: https://www.johndcook.com/blog/2010/06/02/whats-so-hard-about-finding-a-hypotenuse/
+		double max = my_rand_max/2 + 1;
+		double min = value;
+		double r = min / max;
+		tmp->y = max * sqrt(1 - r*r);
+		tmp->y -= rand() % (tmp->y + 1);
+		if((value % 2) == 0){
+			tmp->y *= -1;
+		}
+		if((rand() % 2) == 0){
+			tmp->x *= -1;
+		}
+
+		input_points.push_back(tmp);
+	}
+
+	auto t1 = std::chrono::high_resolution_clock::now();
+	quick_hull(input_points, output_points);
+	auto t2 = std::chrono::high_resolution_clock::now();
+	auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+	std::chrono::duration<double> ms_double = t2 - t1;
+	std::cout << "\tConvex Hull has: " << output_points.size() << " points" << std::endl;
+	std::cout << "\tExecution time: " << ms_int.count() << " (ms), " <<  ms_double.count() << " (s)" << std::endl;
+	verify_convex_hull(input_points, output_points);
+	for(int i = 0; i < input_points.size(); i++){
+		delete(input_points.at(i));
+	}
+}
+
 // Displays the execution time to compute convex hull with exponential sweep on input sizes
 void benchmark_square_exp_test(void){
 	std::cout << "Benchmark Square Exponential Sweep Test:" << std::endl;
@@ -346,11 +388,12 @@ void poor_mans_profile(){
 
 int main() {
 	// to visualize & verify algorithm correctness:
-	manual_test();
+	// manual_test();
 	//unit_test();
 	// circular_polygon();
 
 	// to benchmark the algorithm:
+	benchmark_static_circular();
 	// benchmark_square_exp_test();
 	// benchmark_circular_exp_test();
 	// benchmark_square_linear_test();
