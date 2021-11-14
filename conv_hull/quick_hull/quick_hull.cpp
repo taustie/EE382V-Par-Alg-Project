@@ -67,7 +67,7 @@ void quick_hull(std::vector<Point *> &input_points, std::list<Point *> &convex_h
 
 //	std::cout << "min point: (" << min_point->x << "," << min_point->y << ")" << std::endl;
 //	std::cout << "max point: (" << max_point->x << "," << max_point->y << ")" << std::endl;
-	
+
 	if(threads > 1){
 		#pragma omp parallel
 		{
@@ -136,10 +136,10 @@ void sub_hull_seq(Point ** input_points, int size, Point* p1, Point* p2, std::li
 
 	if(left_points.size() < 2){ // 0 or 1 points on left, then do combine step
 		if(left_points.size() == 1) {
-		    //#pragma omp critical
+		    #pragma omp critical
 			convex_hull.push_back(left_points.at(0)); // Atomic update convex_hull
 		}
-        //#pragma omp critical
+        #pragma omp critical
 		convex_hull.push_back(p1);
 	}
 	else{ // do divide step
@@ -160,16 +160,16 @@ void sub_hull_par(int threads, Point ** input_points, int size, Point* p1, Point
 
 	if(left_points.size() < 2){ // 0 or 1 points on left, then do combine step
 		if(left_points.size() == 1) {
-		    //#pragma omp critical
+		    #pragma omp critical
 			convex_hull.push_back(left_points.at(0)); // Atomic update convex_hull
 		}
-        //#pragma omp critical
+        #pragma omp critical
 		convex_hull.push_back(p1);
 	}
 	else{ // do divide step
 		Point* max_point;
 		get_max_dist_parallel(left_points, &max_point, p1, p2);
-		
+
 		if(threads > 1){
 			#pragma omp task shared(convex_hull) //if(left_points.size() > 10)
 			{

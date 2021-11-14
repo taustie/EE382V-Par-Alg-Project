@@ -217,7 +217,7 @@ void benchmark_square_exp_test(void){
 // Displays the execution time to compute convex hull with exponential sweep on input sizes
 void benchmark_circular_exp_test(void){
 	std::cout << "Benchmark Circular Exponential Sweep Test:" << std::endl;
-	int repeat_count = 1;
+	int repeat_count = 2;
 	std::cout << "\trepeat_count: " << repeat_count << std::endl;
 	for(int element_count = 100; element_count <= 100000000; element_count*=10){
 		std::cout << "\tNumber of inputs: " << element_count << std::endl;
@@ -253,7 +253,7 @@ void benchmark_circular_exp_test(void){
 			std::cout << "\t\tConvex Hull has: " << output_points.size() << " points" << std::endl;
 			std::cout << "\t\tExecution time: " << ms_int.count() << " (ms), " <<  ms_double.count() << " (s)" << std::endl;
 
-			verify_convex_hull(input_points, output_points);
+			// verify_convex_hull(input_points, output_points);
 			for(int i = 0; i < input_points.size(); i++){
 				delete(input_points.at(i));
 			}
@@ -301,7 +301,7 @@ void benchmark_square_linear_test(void){
 // Displays the execution time to compute convex hull with linear sweep on input sizes
 void benchmark_circular_linear_test(void){
 	std::cout << "Benchmark Circular Linear Sweep Test:" << std::endl;
-	int repeat_count = 1;
+	int repeat_count = 2;
 	std::cout << "\trepeat_count: " << repeat_count << std::endl;
 	for(int element_count = 10000000; element_count <= 100000000; element_count+=10000000){
 		std::cout << "\tNumber of inputs: " << element_count << std::endl;
@@ -337,7 +337,7 @@ void benchmark_circular_linear_test(void){
 			std::cout << "\t\tConvex Hull has: " << output_points.size() << " points" << std::endl;
 			std::cout << "\t\tExecution time: " << ms_int.count() << " (ms), " <<  ms_double.count() << " (s)" << std::endl;
 
-			verify_convex_hull(input_points, output_points);
+			// verify_convex_hull(input_points, output_points);
 			for(int i = 0; i < input_points.size(); i++){
 				delete(input_points.at(i));
 			}
@@ -393,9 +393,9 @@ int main() {
 	// circular_polygon();
 
 	// to benchmark the algorithm:
-	benchmark_static_circular();
+	// benchmark_static_circular();
 	// benchmark_square_exp_test();
-	// benchmark_circular_exp_test();
+	 benchmark_circular_exp_test();
 	// benchmark_square_linear_test();
 	// benchmark_circular_linear_test();
 
