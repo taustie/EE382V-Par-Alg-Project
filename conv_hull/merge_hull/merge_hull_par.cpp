@@ -308,10 +308,10 @@ vector<pair<int, int>> merge_hulls(vector<pair<int, int>> a, vector<pair<int, in
 	pair<int, int> uppera = tu.first, upperb = tu.second;
 	pair<int, int> lowera = tl.first, lowerb = tl.second;
 
-    // #pragma omp parallel sections
-    // {
-    //     #pragma omp section
-    //     {
+    #pragma omp parallel sections
+    {
+        #pragma omp section
+        {
             int ind = 0;
             while(a[ind].first != uppera.first && a[ind].second != uppera.second)
             {
@@ -325,11 +325,11 @@ vector<pair<int, int>> merge_hulls(vector<pair<int, int>> a, vector<pair<int, in
                 ret.push_back(a[ind]);
             }
             ret.push_back(a[ind]);
-        // }
+        }
 
-        // #pragma omp section
-        // {
-            ind = 0;
+        #pragma omp section
+        {
+            int ind = 0;
 
             while(b[ind].first != lowerb.first && b[ind].second != lowerb.second)
             {
@@ -343,9 +343,9 @@ vector<pair<int, int>> merge_hulls(vector<pair<int, int>> a, vector<pair<int, in
                 ret.push_back(b[ind]);
             }
             ret.push_back(b[ind]);
-    //     }
+        }
 
-    // }
+    }
 	return ret;
 
 }
