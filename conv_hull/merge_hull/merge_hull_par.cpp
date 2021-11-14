@@ -159,9 +159,13 @@ pair<pair<int, int>, pair<int, int>> calculate_upper_tangent(vector<pair<int, in
 				{
 					if(dis(a[inda], b[indb]) > dis(a[(inda+1)%n1], b[indb]))
 					{
-						break;
-					}
-					inda = (inda + 1) % n1;
+						a.erase(a.begin() + ((inda+1)%n1));
+					} else {
+                        a.erase(a.begin() + inda);
+                    }
+                    n1 = a.size();
+                    inda = calc_right_m(a);
+                    indb = calc_left_m(b);
 				}
 			} else
 			{
@@ -181,10 +185,14 @@ pair<pair<int, int>, pair<int, int>> calculate_upper_tangent(vector<pair<int, in
 				{
 					if(dis(a[inda], b[indb]) > dis(a[inda], b[(n2+indb-1)%n2]))
 					{
-						break;
-					}
-					indb = (n2+indb-1)%n2;
-					done = 0;
+						b.erase(b.begin() + ((n2+indb-1)%n2));
+					} else
+                    {
+                        b.erase(b.begin() + indb);
+                    }
+                    n2 = b.size();
+                    inda = calc_right_m(a);
+                    indb = calc_left_m(b);
 				}
 			} else
 			{
@@ -223,9 +231,14 @@ pair<pair<int, int>, pair<int, int>> calculate_lower_tangent(vector<pair<int, in
 				{
 					if(dis(a[inda], b[indb]) > dis(a[inda], b[(indb+1)%n2]))
 					{
-						break;
-					}
-					indb=(indb+1)%n2;
+						b.erase(b.begin() + ((indb+1)%n2));
+					} else
+                    {
+                        b.erase(b.begin() + (indb));
+                    }
+					n2 = b.size();
+                    inda = calc_right_m(a);
+                    indb = calc_left_m(b);
 				}
 			} else
 			{
@@ -246,9 +259,14 @@ pair<pair<int, int>, pair<int, int>> calculate_lower_tangent(vector<pair<int, in
 				{
 					if(dis(a[inda], b[indb]) > dis(a[(n1+inda-1)%n1], b[indb]))
 					{
-						break;
-					}
-					inda=(n1+inda-1)%n1;
+						a.erase(a.begin() + ((n1+inda-1)%n1));
+					} else
+                    {
+                        a.erase(a.begin() + inda);
+                    }
+					n1 = a.size();
+                    inda = calc_right_m(a);
+                    indb = calc_left_m(b);
 				}
 			} else
 			{
@@ -267,23 +285,23 @@ pair<pair<int, int>, pair<int, int>> calculate_lower_tangent(vector<pair<int, in
 vector<pair<int, int>> merge_hulls(vector<pair<int, int>> a, vector<pair<int, int>> b)
 {
 	int n1 = a.size(), n2 = b.size();
-	// vector<pair<int, int>> ua, ub, la, lb;
-    // ua = fill_vector(a);
-    // la = fill_vector(a);
-    // ub = fill_vector(b);
-    // lb = fill_vector(b);
+	vector<pair<int, int>> ua, ub, la, lb;
+    ua = fill_vector(a);
+    la = fill_vector(a);
+    ub = fill_vector(b);
+    lb = fill_vector(b);
     // cout << la.size() << endl;
     pair<pair<int, int>, pair<int, int>> tu;
 	pair<pair<int, int>, pair<int, int>> tl;
 
-    // #pragma omp parallel sections
-    // {
-        // #pragma omp section
-        tu = calculate_upper_tangent(a, b);
+    #pragma omp parallel sections
+    {
+        #pragma omp section
+        tu = calculate_upper_tangent(ua, ub);
 
-        // #pragma omp section
-        tl = calculate_lower_tangent(a, b);
-    // }
+        #pragma omp section
+        tl = calculate_lower_tangent(la, lb);
+    }
 	
 	vector<pair<int, int>> ret;
 	
