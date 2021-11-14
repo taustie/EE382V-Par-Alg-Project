@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <chrono>
 #include <random>
+#include <fstream>
 
 // #include "./utils.hpp"
 
@@ -144,11 +145,11 @@ pair<pair<int, int>, pair<int, int>> calculate_upper_tangent(vector<pair<int, in
 	bool done = 0;
 	while (!done)
 	{
-        cout << "in while" << endl;
+        // cout << "in while" << endl;
 		done = 1;
 		while (orientation(b[indb], a[inda], a[(inda+1)%n1]) >= 0)
 		{
-            cout << "in while" << endl;
+            // cout << "in while" << endl;
 			if(orientation(b[indb], a[inda], a[(inda+1)%n1]) == 0)
 			{
 				if(n1 == 1)
@@ -170,7 +171,7 @@ pair<pair<int, int>, pair<int, int>> calculate_upper_tangent(vector<pair<int, in
 			
 		while (orientation(a[inda], b[indb], b[(n2+indb-1)%n2]) <= 0)
 		{
-            cout << "in while" << endl;
+            // cout << "in while" << endl;
 			if(orientation(a[inda], b[indb], b[(n2+indb-1)%n2]) == 0)
 			{
 				if(n2 == 1)
@@ -208,11 +209,11 @@ pair<pair<int, int>, pair<int, int>> calculate_lower_tangent(vector<pair<int, in
 	bool done = 0;
 	while (!done)
 	{
-        cout << "in while" << endl;
+        // cout << "in while" << endl;
 		done = 1;
 		while (orientation(a[inda], b[indb], b[(indb+1)%n2])>= 0)
 		{
-            cout << "in while" << endl;
+            // cout << "in while" << endl;
 			if(orientation(a[inda], b[indb], b[(indb+1)%n2]) == 0)
 			{
 				if(n2 == 1)
@@ -235,7 +236,7 @@ pair<pair<int, int>, pair<int, int>> calculate_lower_tangent(vector<pair<int, in
 
 		while (orientation(b[indb], a[inda], a[(n1+inda-1)%n1]) <= 0)
 		{
-            cout << "in while" << endl;
+            // cout << "in while" << endl;
 			if(orientation(b[indb], a[inda], a[(n1+inda-1)%n1]) == 0)
 			{
 				if(n1 == 1)
@@ -275,24 +276,24 @@ vector<pair<int, int>> merge_hulls(vector<pair<int, int>> a, vector<pair<int, in
     pair<pair<int, int>, pair<int, int>> tu;
 	pair<pair<int, int>, pair<int, int>> tl;
 
-    #pragma omp parallel sections
-    {
-        #pragma omp section
+    // #pragma omp parallel sections
+    // {
+        // #pragma omp section
         tu = calculate_upper_tangent(a, b);
 
-        #pragma omp section
+        // #pragma omp section
         tl = calculate_lower_tangent(a, b);
-    }
+    // }
 	
 	vector<pair<int, int>> ret;
 	
 	pair<int, int> uppera = tu.first, upperb = tu.second;
 	pair<int, int> lowera = tl.first, lowerb = tl.second;
 
-    #pragma omp parallel sections
-    {
-        #pragma omp section
-        {
+    // #pragma omp parallel sections
+    // {
+    //     #pragma omp section
+    //     {
             int ind = 0;
             while(a[ind].first != uppera.first && a[ind].second != uppera.second)
             {
@@ -306,11 +307,11 @@ vector<pair<int, int>> merge_hulls(vector<pair<int, int>> a, vector<pair<int, in
                 ret.push_back(a[ind]);
             }
             ret.push_back(a[ind]);
-        }
+        // }
 
-        #pragma omp section
-        {
-            int ind = 0;
+        // #pragma omp section
+        // {
+            ind = 0;
 
             while(b[ind].first != lowerb.first && b[ind].second != lowerb.second)
             {
@@ -324,9 +325,9 @@ vector<pair<int, int>> merge_hulls(vector<pair<int, int>> a, vector<pair<int, in
                 ret.push_back(b[ind]);
             }
             ret.push_back(b[ind]);
-        }
+    //     }
 
-    }
+    // }
 	return ret;
 
 }
@@ -415,29 +416,48 @@ vector<pair<int, int>> find_convex_hull(vector<pair<int, int>> a)
 }
 
 int main( int argc, char* argv[] )
-{ 
-    omp_set_num_threads(2);
-    omp_set_nested(1);
+{
+    // omp_set_nested(1);
     std::random_device rd;
 	std::mt19937 rng(rd());
 	std::uniform_int_distribution<int> uni(-100, 100);
-    vector<pair<int, int>> points;
-	for(int i = 0; i < 1000; i++)
+    
+    vector<int> n = {100, 1000, 10000};
+    for(int i = 0; i < n.size(); i++)
     {
-		auto random_integer = uni(rng);
-		int x = (int)random_integer;
-		random_integer = uni(rng);
-		int y = (int)random_integer;
-		points.push_back(make_pair(x, y));
-	}
+        vector<pair<int, int>> points;
+        ofstream myfile;
+        string name = "test" + to_string(i) + ".txt";
+        myfile.open (name);
+        for(int j = 0; j < n[i]; j++)
+        {
+            auto random_integer = uni(rng);
+            int x = (int)random_integer;
+            random_integer = uni(rng);
+            int y = (int)random_integer;
+            points.push_back(make_pair(x, y));
+            myfile << points[j].first << ", "<< points[j].second << std::endl;
+        }
+        
+        sort(points.begin(), points.end());
+        omp_set_num_threads(4);
+        auto startp = high_resolution_clock::now();
+        vector<pair<int, int>> final_hull = find_convex_hull(points);
+        auto endp = high_resolution_clock::now();
+        myfile << "parallel: " << duration_cast<microseconds>(endp - startp).count() << endl;
+
+        omp_set_num_threads(1);
+        auto starts = high_resolution_clock::now();
+        final_hull = find_convex_hull(points);
+        auto ends = high_resolution_clock::now();
+        myfile << "sequential: " << duration_cast<microseconds>(ends - starts).count() << endl;
+        
+        myfile.close();
+        // cout << duration.count() << endl;
+    }
 
 
-    sort(points.begin(), points.end());
-    auto start = high_resolution_clock::now();
-    vector<pair<int, int>> final_hull = find_convex_hull(points);
-    cout << final_hull.size() << endl;
-    auto end = high_resolution_clock::now();
-	auto duration = duration_cast<microseconds>(end - start);
-	cout << duration.count() << endl;
+
+
     return 0;
 }
