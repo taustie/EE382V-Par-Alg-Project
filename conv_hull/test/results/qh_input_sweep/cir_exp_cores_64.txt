@@ -1,0 +1,68 @@
+
+OPENMP DISPLAY ENVIRONMENT BEGIN
+  _OPENMP = '201511'
+  OMP_DYNAMIC = 'FALSE'
+  OMP_NESTED = 'TRUE'
+  OMP_NUM_THREADS = '64'
+  OMP_SCHEDULE = 'DYNAMIC'
+  OMP_PROC_BIND = 'FALSE'
+  OMP_PLACES = ''
+  OMP_STACKSIZE = '140722336256093'
+  OMP_WAIT_POLICY = 'PASSIVE'
+  OMP_THREAD_LIMIT = '4294967295'
+  OMP_MAX_ACTIVE_LEVELS = '2147483647'
+  OMP_CANCELLATION = 'FALSE'
+  OMP_DEFAULT_DEVICE = '0'
+  OMP_MAX_TASK_PRIORITY = '0'
+OPENMP DISPLAY ENVIRONMENT END
+Benchmark Circular Exponential Sweep Test:
+	repeat_count: 2
+	Number of inputs: 100
+	thread count: 64
+		Convex Hull has: 19 points
+		Execution time: 67 (ms), 0.067975 (s)
+	thread count: 64
+		Convex Hull has: 19 points
+		Execution time: 46 (ms), 0.0463924 (s)
+	Number of inputs: 1000
+	thread count: 64
+		Convex Hull has: 41 points
+		Execution time: 57 (ms), 0.0577074 (s)
+	thread count: 64
+		Convex Hull has: 41 points
+		Execution time: 56 (ms), 0.05687 (s)
+	Number of inputs: 10000
+	thread count: 64
+		Convex Hull has: 91 points
+		Execution time: 45 (ms), 0.0456643 (s)
+	thread count: 64
+		Convex Hull has: 91 points
+		Execution time: 48 (ms), 0.0485758 (s)
+	Number of inputs: 100000
+	thread count: 64
+		Convex Hull has: 190 points
+		Execution time: 97 (ms), 0.0975332 (s)
+	thread count: 64
+		Convex Hull has: 199 points
+		Execution time: 69 (ms), 0.0691231 (s)
+	Number of inputs: 1000000
+	thread count: 64
+		Convex Hull has: 411 points
+		Execution time: 116 (ms), 0.11687 (s)
+	thread count: 64
+		Convex Hull has: 423 points
+		Execution time: 120 (ms), 0.120467 (s)
+	Number of inputs: 10000000
+	thread count: 64
+		Convex Hull has: 913 points
+		Execution time: 389 (ms), 0.389735 (s)
+	thread count: 64
+		Convex Hull has: 908 points
+		Execution time: 317 (ms), 0.317116 (s)
+	Number of inputs: 100000000
+	thread count: 64
+		Convex Hull has: 1938 points
+		Execution time: 2459 (ms), 2.45936 (s)
+	thread count: 64
+		Convex Hull has: 1932 points
+		Execution time: 2433 (ms), 2.43337 (s)

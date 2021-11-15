@@ -128,7 +128,7 @@ Dist_Info Dist_Max_Compare(Dist_Info a, Dist_Info b){
 	return neutral_distance(); // should never reach here
 }
 
-void get_max_dist_parallel(std::vector<Point *> &left_points, Point** max, Point *p1, Point *p2){
+void get_max_dist_parallel(std::vector<Point *> &left_points, Point** max, Point *p1, Point *p2, int threads){
 	Line line = get_line(*p1, *p2);
 
 	Dist_Info maxDistResult = neutral_distance();
@@ -138,7 +138,7 @@ void get_max_dist_parallel(std::vector<Point *> &left_points, Point** max, Point
 	(maxDist:Dist_Info:omp_out=Dist_Max_Compare(omp_out, omp_in)) \
 	initializer(omp_priv = neutral_distance())
 
-	#pragma omp parallel for reduction(maxDist:maxDistResult)
+	#pragma omp parallel for num_threads(threads) reduction(maxDist:maxDistResult)
 	for(index = 0; index < left_points.size(); index++){
 		double distance = get_distance(line, *left_points.at(index));
 		if(maxDistResult.line_dist < distance){
@@ -158,11 +158,11 @@ void get_max_dist_parallel(std::vector<Point *> &left_points, Point** max, Point
 	*max = left_points.at(maxDistResult.index);
 }
 
-void get_points_on_left_parallel(std::vector<Point *> &left_points, Point ** input_points, int size, Point* p1, Point* p2){
+void get_points_on_left_parallel(std::vector<Point *> &left_points, Point ** input_points, int size, Point* p1, Point* p2, int threads){
 	Vector ref_vector = form_zero_vector(*p1, *p2);
 	// Option 1: See great resource at: https://www.py4u.net/discuss/63446
 	#pragma omp declare reduction (merge : std::vector<Point *> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
-	#pragma omp parallel for reduction(merge: left_points)
+	#pragma omp parallel for num_threads(threads) reduction(merge: left_points)
 	for(long long int i=0; i < size; i++) {
 		Vector test_vector = form_zero_vector(*p2, *input_points[i]);
         if (cross_prod_orientation(ref_vector, test_vector)) {

@@ -155,7 +155,7 @@ void sub_hull_par(int threads, Point ** input_points, int size, Point* p1, Point
 	//std::cout << "size = " << size << std::endl;
 	std::vector<Point *> left_points;
 	//get_points_on_left_sequential(left_points, input_points, size, p1, p2);
-	get_points_on_left_parallel(left_points, input_points, size, p1, p2);
+	get_points_on_left_parallel(left_points, input_points, size, p1, p2, threads);
 	// get_points_on_left_filter_parallel(left_points, input_points, size, p1, p2);
 
 	if(left_points.size() < 2){ // 0 or 1 points on left, then do combine step
@@ -168,7 +168,7 @@ void sub_hull_par(int threads, Point ** input_points, int size, Point* p1, Point
 	}
 	else{ // do divide step
 		Point* max_point;
-		get_max_dist_parallel(left_points, &max_point, p1, p2);
+		get_max_dist_parallel(left_points, &max_point, p1, p2, threads);
 
 		if(threads > 1){
 			#pragma omp task shared(convex_hull) //if(left_points.size() > 10)

@@ -1,13 +1,12 @@
-
 OPENMP DISPLAY ENVIRONMENT BEGIN
   _OPENMP = '201511'
   OMP_DYNAMIC = 'FALSE'
-  OMP_NESTED = 'FALSE'
+  OMP_NESTED = 'TRUE'
   OMP_NUM_THREADS = '4'
   OMP_SCHEDULE = 'DYNAMIC'
   OMP_PROC_BIND = 'FALSE'
   OMP_PLACES = ''
-  OMP_STACKSIZE = '140727662776413'
+  OMP_STACKSIZE = '140733198008413'
   OMP_WAIT_POLICY = 'PASSIVE'
   OMP_THREAD_LIMIT = '4294967295'
   OMP_MAX_ACTIVE_LEVELS = '2147483647'
@@ -19,5 +18,5 @@ Benchmark Static Circular:
 	number of inputs: 100000000
 	using random values between 0 and 100000000
 	thread count: 4
-	Convex Hull has: 1929 points
-	Execution time: 7618 (ms), 7.6183 (s)
+	Convex Hull has: 1930 points
+	Execution time: 14077 (ms), 14.0772 (s)
