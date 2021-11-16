@@ -1,0 +1,3 @@
+points: 100
+parallel: 879
+sequential: 665

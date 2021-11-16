@@ -1,0 +1,3 @@
+points: 1000000
+parallel: 3370103
+sequential: 5749238
