@@ -14,6 +14,9 @@ typedef struct distance_info{
 
 Dist_Info neutral_distance();
 Dist_Info Dist_Max_Compare(Dist_Info a, Dist_Info b);
-void get_max_dist_parallel(std::vector<Point *> &left_points, Point** max, Point *p1, Point *p2);
+void get_max_dist_parallel(std::vector<Point *> &left_points, Point** max, Point *p1, Point *p2, int threads);
+
+void get_points_on_left_parallel(std::vector<Point *> &left_points, Point ** input_points, int size, Point* p1, Point* p2, int threads);
+// void get_points_on_left_filter_parallel(std::vector<Point *> &left_points, Point ** input_points, int size, Point* p1, Point* p2);
 
 #endif

@@ -1,0 +1,89 @@
+
+OPENMP DISPLAY ENVIRONMENT BEGIN
+  _OPENMP = '201511'
+  OMP_DYNAMIC = 'FALSE'
+  OMP_NESTED = 'TRUE'
+  OMP_NUM_THREADS = '64'
+  OMP_SCHEDULE = 'DYNAMIC'
+  OMP_PROC_BIND = 'FALSE'
+  OMP_PLACES = ''
+  OMP_STACKSIZE = '140737064845405'
+  OMP_WAIT_POLICY = 'PASSIVE'
+  OMP_THREAD_LIMIT = '4294967295'
+  OMP_MAX_ACTIVE_LEVELS = '2147483647'
+  OMP_CANCELLATION = 'FALSE'
+  OMP_DEFAULT_DEVICE = '0'
+  OMP_MAX_TASK_PRIORITY = '0'
+OPENMP DISPLAY ENVIRONMENT END
+Benchmark Circular Linear Sweep Test:
+	repeat_count: 2
+	Number of inputs: 10000000
+	thread count: 64
+		Convex Hull has: 874 points
+		Execution time: 432 (ms), 0.432151 (s)
+	thread count: 64
+		Convex Hull has: 900 points
+		Execution time: 383 (ms), 0.383491 (s)
+	Number of inputs: 20000000
+	thread count: 64
+		Convex Hull has: 1120 points
+		Execution time: 600 (ms), 0.600181 (s)
+	thread count: 64
+		Convex Hull has: 1117 points
+		Execution time: 542 (ms), 0.542814 (s)
+	Number of inputs: 30000000
+	thread count: 64
+		Convex Hull has: 1305 points
+		Execution time: 812 (ms), 0.812999 (s)
+	thread count: 64
+		Convex Hull has: 1296 points
+		Execution time: 770 (ms), 0.770815 (s)
+	Number of inputs: 40000000
+	thread count: 64
+		Convex Hull has: 1458 points
+		Execution time: 948 (ms), 0.948216 (s)
+	thread count: 64
+		Convex Hull has: 1417 points
+		Execution time: 932 (ms), 0.932575 (s)
+	Number of inputs: 50000000
+	thread count: 64
+		Convex Hull has: 1527 points
+		Execution time: 1208 (ms), 1.20814 (s)
+	thread count: 64
+		Convex Hull has: 1522 points
+		Execution time: 1187 (ms), 1.18734 (s)
+	Number of inputs: 60000000
+	thread count: 64
+		Convex Hull has: 1645 points
+		Execution time: 1406 (ms), 1.40672 (s)
+	thread count: 64
+		Convex Hull has: 1613 points
+		Execution time: 1479 (ms), 1.47903 (s)
+	Number of inputs: 70000000
+	thread count: 64
+		Convex Hull has: 1725 points
+		Execution time: 1753 (ms), 1.75337 (s)
+	thread count: 64
+		Convex Hull has: 1716 points
+		Execution time: 1599 (ms), 1.59942 (s)
+	Number of inputs: 80000000
+	thread count: 64
+		Convex Hull has: 1805 points
+		Execution time: 1966 (ms), 1.96684 (s)
+	thread count: 64
+		Convex Hull has: 1786 points
+		Execution time: 1910 (ms), 1.91054 (s)
+	Number of inputs: 90000000
+	thread count: 64
+		Convex Hull has: 1874 points
+		Execution time: 2120 (ms), 2.12066 (s)
+	thread count: 64
+		Convex Hull has: 1871 points
+		Execution time: 2090 (ms), 2.09053 (s)
+	Number of inputs: 100000000
+	thread count: 64
+		Convex Hull has: 1944 points
+		Execution time: 2368 (ms), 2.36848 (s)
+	thread count: 64
+		Convex Hull has: 1922 points
+		Execution time: 2429 (ms), 2.42904 (s)

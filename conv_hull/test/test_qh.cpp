@@ -8,6 +8,8 @@
 #include "verify_conv_hull.hpp"
 #include "test_config.hpp"
 
+int my_rand_max = 100000000;
+
 void write_input(std::vector<Point *> &input_points){
 	std::ofstream input_points_file;
     input_points_file.open("../visualize/input.txt");
@@ -30,143 +32,158 @@ void write_output(std::list<Point *> &output_points){
     output_points_file.close();
 }
 
-void test_case_1(void){
+// manually assign input points and verify using visualizer
+void manual_test(void){
+	std::cout << "QuickHull manual test 1:" << std::endl;
 	std::vector<Point *> input_points;
 	std::list<Point *> output_points;
-
-	#if 0
 
 	Point * tmp = new Point;
 	tmp->x = 0; tmp->y = 0; input_points.push_back(tmp);
 	tmp = new Point; tmp->x = -5; tmp->y = 0; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -5; tmp->y = 5; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -5; tmp->y = 4; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 5; tmp->y = 5; input_points.push_back(tmp);
+	tmp = new Point; tmp->x = 3; tmp->y = 4; input_points.push_back(tmp);
 	tmp = new Point; tmp->x = -5; tmp->y = 6; input_points.push_back(tmp);
 
-	tmp = new Point; tmp->x = 5; tmp->y = 5; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 0; tmp->y = 10; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -1; tmp->y = 10; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 1; tmp->y = 10; input_points.push_back(tmp);
+	write_input(input_points);
+	quick_hull(input_points, output_points);
+	write_output(output_points);
 
-	// inside polygon
-	tmp = new Point; tmp->x = 2; tmp->y = 3; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 2; tmp->y = 7; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -2; tmp->y = 3; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -2; tmp->y = 7; input_points.push_back(tmp);
-
-	// test ray tracing
-	tmp = new Point; tmp->x = 0; tmp->y = 0; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 5; tmp->y = 5; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 4; tmp->y = 7; input_points.push_back(tmp);
-
-	tmp = new Point; tmp->x = 17766; tmp->y = 1191; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 17766; tmp->y = 7834; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 17766; tmp->y = 12999; input_points.push_back(tmp);
-
-	tmp = new Point; tmp->x = -4596; tmp->y = -15000; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -3422; tmp->y = 17766; input_points.push_back(tmp);
-	#endif
-
-	Point * tmp = new Point;
-	tmp->x = -4596; tmp->y = -15000; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 12673; tmp->y = -15000; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 17037; tmp->y = -14997; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 17633; tmp->y = -14981; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 17693; tmp->y = -14969; input_points.push_back(tmp);
-
-	tmp = new Point; tmp->x = 17709; tmp->y = -14854; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 17761; tmp->y = -13763; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 17764; tmp->y = -12724; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 17766; tmp->y = 7834; input_points.push_back(tmp);
-
-	tmp = new Point; tmp->x = 17766; tmp->y = 1191; input_points.push_back(tmp);
-
-	// inside polygon
-
-	tmp = new Point; tmp->x = 17766; tmp->y = 12999; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 17764; tmp->y = 15911; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 17757; tmp->y = 17228; input_points.push_back(tmp);
-
-	// test ray tracing
-	tmp = new Point; tmp->x = 17730; tmp->y = 17676; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 17559; tmp->y = 17747; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 15414; tmp->y = 17766; input_points.push_back(tmp);
-
-	tmp = new Point; tmp->x = -3422; tmp->y = 17766; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -12900; tmp->y = 17765; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -14703; tmp->y = 17763; input_points.push_back(tmp);
-
-	tmp = new Point; tmp->x = -14916; tmp->y = 17756; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -14984; tmp->y = 17642; input_points.push_back(tmp);
-
-	tmp = new Point; tmp->x = -14996; tmp->y = 17160; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -14999; tmp->y = 15393; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -14999; tmp->y = -1822; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -14997; tmp->y = -14400; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -14982; tmp->y = -14798; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -14960; tmp->y = -14838; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -14710; tmp->y = -14922; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -14488; tmp->y = -14981; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -13890; tmp->y = -14996; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -9761; tmp->y = -14999; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -4596; tmp->y = -15000; input_points.push_back(tmp);
-
-	quick_hull_new(input_points, output_points);
-
-	std::cout << "Convex Hull has: " << output_points.size() << " points" << std::endl;
-	std::list<Point *>::iterator it;
-	for (it = output_points.begin(); it != output_points.end(); ++it){
-		std::cout << "Convex Hull has point: (" << (*it)->x << "," << (*it)->y << ")" << std::endl;
-	}
-
-	// tmp = new Point; tmp->x = -3; tmp->y = 1; input_points.push_back(tmp);
 	verify_convex_hull(input_points, output_points);
+	std::cout << "\tConvex Hull has: " << output_points.size() << " points" << std::endl;
+	for(int i = 0; i < input_points.size(); i++){
+		delete(input_points.at(i));
+	}
 }
 
-void test_case_2(void){
+// Used to verify correctness of convex hull output points at scale
+void unit_test(){
 	std::vector<Point *> input_points;
 	std::list<Point *> output_points;
 
 	srand(time(NULL));
 	int element_count = 10000;
+	std::cout << "QuickHull unit test:" << std::endl;
+	std::cout << "\tnumber of inputs: " << element_count << std::endl;
+	std::cout << "\tusing random values between 0 and " << my_rand_max << std::endl;
 	for(int i = 0; i < element_count; i++){
 		Point * tmp = new Point;
-		int value = rand() % 32767 - 15000;
+		int value = (rand() % my_rand_max) - (my_rand_max/2); // less than int max to reduce the chance of floating point rounding errors
 		tmp->x = value;
-		//value = rand() % 32767 - 15000;
-		tmp->y = sqrt((18000*18000) - (value * value));
+		value = (rand() % my_rand_max) - (my_rand_max/2);
+		tmp->y = value;
+		input_points.push_back(tmp);
+	}
+
+	write_input(input_points);
+	auto t1 = std::chrono::high_resolution_clock::now();
+	quick_hull(input_points, output_points);
+	auto t2 = std::chrono::high_resolution_clock::now();
+	auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+	std::chrono::duration<double> ms_double = t2 - t1;
+	std::cout << "\tConvex Hull has: " << output_points.size() << " points" << std::endl;
+	std::cout << "\tExecution time: " << ms_int.count() << " (ms), " <<  ms_double.count() << " (s)" << std::endl;
+	write_output(output_points);
+	verify_convex_hull(input_points, output_points);
+	for(int i = 0; i < input_points.size(); i++){
+		delete(input_points.at(i));
+	}
+}
+
+// Convex Hull should be a circular polygon
+void circular_polygon(){
+	std::vector<Point *> input_points;
+	std::list<Point *> output_points;
+
+	srand(time(NULL));
+	int element_count = 10000;
+	std::cout << "Circular Polygon:" << std::endl;
+	std::cout << "\tnumber of inputs: " << element_count << std::endl;
+	std::cout << "\tusing random values between 0 and " << my_rand_max << std::endl;
+	for(int i = 0; i < element_count; i++){
+		Point * tmp = new Point;
+		int value = (rand() % (my_rand_max/2));
+		tmp->x = value;
+		// Technique to prevent overflow: https://www.johndcook.com/blog/2010/06/02/whats-so-hard-about-finding-a-hypotenuse/
+		double max = my_rand_max/2 + 1;
+		double min = value;
+		double r = min / max;
+		tmp->y = max * sqrt(1 - r*r);
+		tmp->y -= rand() % (tmp->y + 1);
 		if((value % 2) == 0){
 			tmp->y *= -1;
 		}
-		tmp->y += rand() % 5000 - 2500;
+		if((rand() % 2) == 0){
+			tmp->x *= -1;
+		}
 
 		input_points.push_back(tmp);
 	}
 
 	write_input(input_points);
 	auto t1 = std::chrono::high_resolution_clock::now();
-	quick_hull_new(input_points, output_points);
+	quick_hull(input_points, output_points);
 	auto t2 = std::chrono::high_resolution_clock::now();
 	auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
 	std::chrono::duration<double> ms_double = t2 - t1;
+	std::cout << "\tConvex Hull has: " << output_points.size() << " points" << std::endl;
+	std::cout << "\tExecution time: " << ms_int.count() << " (ms), " <<  ms_double.count() << " (s)" << std::endl;
 	write_output(output_points);
-
 	verify_convex_hull(input_points, output_points);
-	std::cout << "Convex Hull has: " << output_points.size() << " points" << std::endl;
-	std::cout << "Execution time: " << ms_int.count() << " (ms), " <<  ms_double.count() << " (s)" << std::endl;;
+	for(int i = 0; i < input_points.size(); i++){
+		delete(input_points.at(i));
+	}
 }
 
-void test_case_3(void){
+void benchmark_static_circular(){
+	std::vector<Point *> input_points;
+	std::list<Point *> output_points;
 
+	srand(time(NULL));
+	int element_count = 100000000;
+	std::cout << "Benchmark Static Circular:" << std::endl;
+	std::cout << "\tnumber of inputs: " << element_count << std::endl;
+	std::cout << "\tusing random values between 0 and " << my_rand_max << std::endl;
+	for(int i = 0; i < element_count; i++){
+		Point * tmp = new Point;
+		int value = (rand() % (my_rand_max/2));
+		tmp->x = value;
+		// Technique to prevent overflow: https://www.johndcook.com/blog/2010/06/02/whats-so-hard-about-finding-a-hypotenuse/
+		double max = my_rand_max/2 + 1;
+		double min = value;
+		double r = min / max;
+		tmp->y = max * sqrt(1 - r*r);
+		tmp->y -= rand() % (tmp->y + 1);
+		if((value % 2) == 0){
+			tmp->y *= -1;
+		}
+		if((rand() % 2) == 0){
+			tmp->x *= -1;
+		}
 
-	#ifdef QUICKHULL_PARALLEL
-	std::cout << "Parallel Test Case:" << std::endl;
-	#else
-	std::cout << "Sequential Test Case:" << std::endl;
-	#endif
+		input_points.push_back(tmp);
+	}
 
+	auto t1 = std::chrono::high_resolution_clock::now();
+	quick_hull(input_points, output_points);
+	auto t2 = std::chrono::high_resolution_clock::now();
+	auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+	std::chrono::duration<double> ms_double = t2 - t1;
+	std::cout << "\tConvex Hull has: " << output_points.size() << " points" << std::endl;
+	std::cout << "\tExecution time: " << ms_int.count() << " (ms), " <<  ms_double.count() << " (s)" << std::endl;
+	verify_convex_hull(input_points, output_points);
+	for(int i = 0; i < input_points.size(); i++){
+		delete(input_points.at(i));
+	}
+}
+
+// Displays the execution time to compute convex hull with exponential sweep on input sizes
+void benchmark_square_exp_test(void){
+	std::cout << "Benchmark Square Exponential Sweep Test:" << std::endl;
 	int repeat_count = 1;
-	for(int element_count = 1000; element_count <= 100000000; element_count*=10){
+	std::cout << "\trepeat_count: " << repeat_count << std::endl;
+	for(int element_count = 100; element_count <= 100000000; element_count*=10){
+		std::cout << "\tNumber of inputs: " << element_count << std::endl;
 		for(int i = 0; i < repeat_count; i++){
 			std::vector<Point *> input_points;
 			std::list<Point *> output_points;
@@ -174,53 +191,215 @@ void test_case_3(void){
 			srand(time(NULL));
 			for(int i = 0; i < element_count; i++){
 				Point * tmp = new Point;
-				int value = rand() % 32767 - 15000;
+				int value = (rand() % my_rand_max) - (my_rand_max/2); // less than int max to reduce the chance of floating point rounding errors
 				tmp->x = value;
-				value = rand() % 32767 - 15000;
+				value = (rand() % my_rand_max) - (my_rand_max/2);
 				tmp->y = value;
 				input_points.push_back(tmp);
 			}
 
 			auto t1 = std::chrono::high_resolution_clock::now();
-			quick_hull_new(input_points, output_points);
+			quick_hull(input_points, output_points);
 			auto t2 = std::chrono::high_resolution_clock::now();
 			auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
 			std::chrono::duration<double> ms_double = t2 - t1;
+			std::cout << "\t\tConvex Hull has: " << output_points.size() << " points" << std::endl;
+			std::cout << "\t\tExecution time: " << ms_int.count() << " (ms), " <<  ms_double.count() << " (s)" << std::endl;
 
 			verify_convex_hull(input_points, output_points);
-			std::cout << "Convex Hull has: " << output_points.size() << " points" << std::endl;
-			std::cout << "Execution time: " << ms_int.count() << " (ms), " <<  ms_double.count() << " (s)" << std::endl;;
-			std::cout << std::endl;
+			for(int i = 0; i < input_points.size(); i++){
+				delete(input_points.at(i));
+			}
 		}
 	}
-
 }
 
-void test_case_4(void){
+// Displays the execution time to compute convex hull with exponential sweep on input sizes
+void benchmark_circular_exp_test(void){
+	std::cout << "Benchmark Circular Exponential Sweep Test:" << std::endl;
+	int repeat_count = 2;
+	std::cout << "\trepeat_count: " << repeat_count << std::endl;
+	for(int element_count = 100; element_count <= 100000000; element_count*=10){
+		std::cout << "\tNumber of inputs: " << element_count << std::endl;
+		for(int i = 0; i < repeat_count; i++){
+			std::vector<Point *> input_points;
+			std::list<Point *> output_points;
+
+			srand(time(NULL));
+			for(int i = 0; i < element_count; i++){
+				Point * tmp = new Point;
+				int value = (rand() % (my_rand_max/2));
+				tmp->x = value;
+				// Technique to prevent overflow: https://www.johndcook.com/blog/2010/06/02/whats-so-hard-about-finding-a-hypotenuse/
+				double max = my_rand_max/2 + 1;
+				double min = value;
+				double r = min / max;
+				tmp->y = max * sqrt(1 - r*r);
+				tmp->y -= rand() % (tmp->y + 1);
+				if((value % 2) == 0){
+					tmp->y *= -1;
+				}
+				if((rand() % 2) == 0){
+					tmp->x *= -1;
+				}
+				input_points.push_back(tmp);
+			}
+
+			auto t1 = std::chrono::high_resolution_clock::now();
+			quick_hull(input_points, output_points);
+			auto t2 = std::chrono::high_resolution_clock::now();
+			auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+			std::chrono::duration<double> ms_double = t2 - t1;
+			std::cout << "\t\tConvex Hull has: " << output_points.size() << " points" << std::endl;
+			std::cout << "\t\tExecution time: " << ms_int.count() << " (ms), " <<  ms_double.count() << " (s)" << std::endl;
+
+			// verify_convex_hull(input_points, output_points);
+			for(int i = 0; i < input_points.size(); i++){
+				delete(input_points.at(i));
+			}
+		}
+	}
+}
+
+// Displays the execution time to compute convex hull with linear sweep on input sizes
+void benchmark_square_linear_test(void){
+	std::cout << "Benchmark Square Linear Sweep Test:" << std::endl;
+	int repeat_count = 1;
+	std::cout << "\trepeat_count: " << repeat_count << std::endl;
+	for(int element_count = 10000000; element_count <= 100000000; element_count+=10000000){
+		std::cout << "\tNumber of inputs: " << element_count << std::endl;
+		for(int i = 0; i < repeat_count; i++){
+			std::vector<Point *> input_points;
+			std::list<Point *> output_points;
+
+			srand(time(NULL));
+			for(int i = 0; i < element_count; i++){
+				Point * tmp = new Point;
+				int value = (rand() % my_rand_max) - (my_rand_max/2); // less than int max to reduce the chance of floating point rounding errors
+				tmp->x = value;
+				value = (rand() % my_rand_max) - (my_rand_max/2);
+				tmp->y = value;
+				input_points.push_back(tmp);
+			}
+
+			auto t1 = std::chrono::high_resolution_clock::now();
+			quick_hull(input_points, output_points);
+			auto t2 = std::chrono::high_resolution_clock::now();
+			auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+			std::chrono::duration<double> ms_double = t2 - t1;
+			std::cout << "\t\tConvex Hull has: " << output_points.size() << " points" << std::endl;
+			std::cout << "\t\tExecution time: " << ms_int.count() << " (ms), " <<  ms_double.count() << " (s)" << std::endl;
+
+			verify_convex_hull(input_points, output_points);
+			for(int i = 0; i < input_points.size(); i++){
+				delete(input_points.at(i));
+			}
+		}
+	}
+}
+
+// Displays the execution time to compute convex hull with linear sweep on input sizes
+void benchmark_circular_linear_test(void){
+	std::cout << "Benchmark Circular Linear Sweep Test:" << std::endl;
+	int repeat_count = 2;
+	std::cout << "\trepeat_count: " << repeat_count << std::endl;
+	for(int element_count = 10000000; element_count <= 100000000; element_count+=10000000){
+		std::cout << "\tNumber of inputs: " << element_count << std::endl;
+		for(int i = 0; i < repeat_count; i++){
+			std::vector<Point *> input_points;
+			std::list<Point *> output_points;
+
+			srand(time(NULL));
+			for(int i = 0; i < element_count; i++){
+				Point * tmp = new Point;
+				int value = (rand() % (my_rand_max/2));
+				tmp->x = value;
+				// Technique to prevent overflow: https://www.johndcook.com/blog/2010/06/02/whats-so-hard-about-finding-a-hypotenuse/
+				double max = my_rand_max/2 + 1;
+				double min = value;
+				double r = min / max;
+				tmp->y = max * sqrt(1 - r*r);
+				tmp->y -= rand() % (tmp->y + 1);
+				if((value % 2) == 0){
+					tmp->y *= -1;
+				}
+				if((rand() % 2) == 0){
+					tmp->x *= -1;
+				}
+				input_points.push_back(tmp);
+			}
+
+			auto t1 = std::chrono::high_resolution_clock::now();
+			quick_hull(input_points, output_points);
+			auto t2 = std::chrono::high_resolution_clock::now();
+			auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+			std::chrono::duration<double> ms_double = t2 - t1;
+			std::cout << "\t\tConvex Hull has: " << output_points.size() << " points" << std::endl;
+			std::cout << "\t\tExecution time: " << ms_int.count() << " (ms), " <<  ms_double.count() << " (s)" << std::endl;
+
+			// verify_convex_hull(input_points, output_points);
+			for(int i = 0; i < input_points.size(); i++){
+				delete(input_points.at(i));
+			}
+		}
+	}
+}
+
+void poor_mans_profile(){
 	std::vector<Point *> input_points;
 	std::list<Point *> output_points;
 
-	Point * tmp = new Point;
-	tmp->x = 0; tmp->y = 0; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 2; tmp->y = 0; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = 4; tmp->y = 4; input_points.push_back(tmp);
-	tmp = new Point; tmp->x = -5; tmp->y = 0; input_points.push_back(tmp);
+	srand(time(NULL));
+	int element_count = 20000000;
+	std::cout << "Poor Man's Profiling:" << std::endl;
+	std::cout << "\tnumber of inputs: " << element_count << std::endl;
+	std::cout << "\tusing random values between 0 and " << my_rand_max << std::endl;
+	for(int i = 0; i < element_count; i++){
+		Point * tmp = new Point;
+		int value = (rand() % (my_rand_max/2));
+		tmp->x = value;
+		// Technique to prevent overflow: https://www.johndcook.com/blog/2010/06/02/whats-so-hard-about-finding-a-hypotenuse/
+		double max = my_rand_max/2 + 1;
+		double min = value;
+		double r = min / max;
+		tmp->y = max * sqrt(1 - r*r);
+		tmp->y -= rand() % (tmp->y + 1);
+		if((value % 2) == 0){
+			tmp->y *= -1;
+		}
+		if((rand() % 2) == 0){
+			tmp->x *= -1;
+		}
 
-	write_input(input_points);
-	quick_hull_new(input_points, output_points);
-	write_output(output_points);
-	std::cout << "Convex Hull has: " << output_points.size() << " points" << std::endl;
-	std::list<Point *>::iterator it;
-	for (it = output_points.begin(); it != output_points.end(); ++it){
-		std::cout << "Convex Hull has point: (" << (*it)->x << "," << (*it)->y << ")" << std::endl;
+		input_points.push_back(tmp);
 	}
 
-	// tmp = new Point; tmp->x = -3; tmp->y = 1; input_points.push_back(tmp);
-	verify_convex_hull(input_points, output_points);
+	auto t1 = std::chrono::high_resolution_clock::now();
+	quick_hull(input_points, output_points);
+	auto t2 = std::chrono::high_resolution_clock::now();
+	auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+	std::chrono::duration<double> ms_double = t2 - t1;
+	std::cout << "\tConvex Hull has: " << output_points.size() << " points" << std::endl;
+	std::cout << "\tExecution time: " << ms_int.count() << " (ms), " <<  ms_double.count() << " (s)" << std::endl;
+	for(int i = 0; i < input_points.size(); i++){
+		delete(input_points.at(i));
+	}
 }
 
 int main() {
-	//test_case_1();
-	test_case_2();
+	// to visualize & verify algorithm correctness:
+	// manual_test();
+	//unit_test();
+	// circular_polygon();
+
+	// to benchmark the algorithm:
+	// benchmark_static_circular();
+	// benchmark_square_exp_test();
+	 benchmark_circular_exp_test();
+	// benchmark_square_linear_test();
+	// benchmark_circular_linear_test();
+
+	// to profile the execution via gdb stack captures
+	// poor_mans_profile();
 	return(0);
 }
