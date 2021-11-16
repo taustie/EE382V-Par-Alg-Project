@@ -7,20 +7,10 @@
 #include <random>
 #include <fstream>
 
-// #include "./utils.hpp"
-
 using namespace std;
 using namespace std::chrono;
 
 pair<int, int> mid;
-
-
-
-
-
-
-
-
 
 int quad(pair<int, int> p)
 {
@@ -33,17 +23,19 @@ int quad(pair<int, int> p)
 	return 4;
 }
 
-int orientation(pair<int, int> a, pair<int, int> b,
-				pair<int, int> c)
+int orientation(pair<int, int> a, pair<int, int> b, pair<int, int> c)
 {
-	int res = (b.second-a.second)*(c.first-b.first) -
-			(c.second-b.second)*(b.first-a.first);
+	int res = (b.second-a.second)*(c.first-b.first) - (c.second-b.second)*(b.first-a.first);
 			
 
 	if (res == 0)
+	{
 		return 0;
-	if (res > 0)
+	} else if (res > 0)
+	{
 		return 1;
+	}
+		
 	return -1;
 }
 
@@ -57,8 +49,13 @@ int calc_right_m(vector<pair<int, int>> a)
 	int n = a.size();
 	int ia = 0;
 	for (int i=1; i<n; i++)
+	{
 		if (a[i].first > a[ia].first)
+		{
 			ia = i;
+		}	
+	}
+
 	return ia;
 }
 
@@ -68,12 +65,17 @@ int calc_left_m(vector<pair<int, int>> a)
 	int n = a.size();
 	int ia = 0;
 	for (int i=1; i<n; i++)
+	{
 		if (a[i].first < a[ia].first)
+		{
 			ia = i;
+		}
+			
+	}
 	return ia;
 }
 
-
+//https://stackoverflow.com/questions/18669296/c-openmp-parallel-for-loop-alternatives-to-stdvector
 vector<pair<int, int>> fill_vector(vector<pair<int, int>> src)
 {
     vector<pair<int, int>> des;
@@ -110,17 +112,6 @@ vector<pair<int, int>> fill_vector(vector<pair<int, int>> src)
     return des;
 }
 
-
-
-
-
-
-
-
-
-
-
-
 bool compare(pair<int, int> p1, pair<int, int> q1)
 {
 	pair<int, int> p = make_pair(p1.first - mid.first, p1.second - mid.second);
@@ -145,11 +136,9 @@ pair<pair<int, int>, pair<int, int>> calculate_upper_tangent(vector<pair<int, in
 	bool done = 0;
 	while (!done)
 	{
-        // cout << "in while" << endl;
 		done = 1;
 		while (orientation(b[indb], a[inda], a[(inda+1)%n1]) >= 0)
 		{
-            // cout << "in while" << endl;
 			if(orientation(b[indb], a[inda], a[(inda+1)%n1]) == 0)
 			{
 				if(n1 == 1)
@@ -175,7 +164,6 @@ pair<pair<int, int>, pair<int, int>> calculate_upper_tangent(vector<pair<int, in
 			
 		while (orientation(a[inda], b[indb], b[(n2+indb-1)%n2]) <= 0)
 		{
-            // cout << "in while" << endl;
 			if(orientation(a[inda], b[indb], b[(n2+indb-1)%n2]) == 0)
 			{
 				if(n2 == 1)
@@ -217,11 +205,9 @@ pair<pair<int, int>, pair<int, int>> calculate_lower_tangent(vector<pair<int, in
 	bool done = 0;
 	while (!done)
 	{
-        // cout << "in while" << endl;
 		done = 1;
 		while (orientation(a[inda], b[indb], b[(indb+1)%n2])>= 0)
 		{
-            // cout << "in while" << endl;
 			if(orientation(a[inda], b[indb], b[(indb+1)%n2]) == 0)
 			{
 				if(n2 == 1)
@@ -249,7 +235,6 @@ pair<pair<int, int>, pair<int, int>> calculate_lower_tangent(vector<pair<int, in
 
 		while (orientation(b[indb], a[inda], a[(n1+inda-1)%n1]) <= 0)
 		{
-            // cout << "in while" << endl;
 			if(orientation(b[indb], a[inda], a[(n1+inda-1)%n1]) == 0)
 			{
 				if(n1 == 1)
@@ -290,7 +275,6 @@ vector<pair<int, int>> merge_hulls(vector<pair<int, int>> a, vector<pair<int, in
     la = fill_vector(a);
     ub = fill_vector(b);
     lb = fill_vector(b);
-    // cout << la.size() << endl;
     pair<pair<int, int>, pair<int, int>> tu;
 	pair<pair<int, int>, pair<int, int>> tl;
 
@@ -435,7 +419,6 @@ vector<pair<int, int>> find_convex_hull(vector<pair<int, int>> a)
 
 int main( int argc, char* argv[] )
 {
-    // omp_set_nested(1);
     std::random_device rd;
 	std::mt19937 rng(rd());
 	std::uniform_int_distribution<int> uni(-100, 100);
@@ -458,6 +441,7 @@ int main( int argc, char* argv[] )
         }
         
         sort(points.begin(), points.end());
+
         omp_set_num_threads(4);
         auto startp = high_resolution_clock::now();
         vector<pair<int, int>> final_hull = find_convex_hull(points);
@@ -471,7 +455,6 @@ int main( int argc, char* argv[] )
         myfile << "sequential: " << duration_cast<microseconds>(ends - starts).count() << endl;
         
         myfile.close();
-        // cout << duration.count() << endl;
     }
 
 
