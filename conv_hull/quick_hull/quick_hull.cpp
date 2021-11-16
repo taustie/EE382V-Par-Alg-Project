@@ -44,7 +44,6 @@ double get_distance(Line l1, Point p1){
 bool cross_prod_orientation(Vector v1, Vector v2){
 	double result = v1.x * v2.y - v1.y * v2.x;
 	if(result > 0){ // assumes colinear points are not distinct on convex hull
-		// std::cout << "result =  " << result  << std::endl;
 		return true;
 	}
 	else{
@@ -64,9 +63,6 @@ void quick_hull(std::vector<Point *> &input_points, std::list<Point *> &convex_h
 	Point* max_point = input_points.at(0);
 
 	get_max_min_points_parallel(input_points, &max_point, &min_point);
-
-//	std::cout << "min point: (" << min_point->x << "," << min_point->y << ")" << std::endl;
-//	std::cout << "max point: (" << max_point->x << "," << max_point->y << ")" << std::endl;
 
 	if(threads > 1){
 		#pragma omp parallel
@@ -128,11 +124,8 @@ void get_max_dist_sequential(std::vector<Point *> &left_points, Point** max, Poi
 }
 
 void sub_hull_seq(Point ** input_points, int size, Point* p1, Point* p2, std::list<Point *> &convex_hull){
-	//std::cout << "size = " << size << std::endl;
 	std::vector<Point *> left_points;
 	get_points_on_left_sequential(left_points, input_points, size, p1, p2);
-	//get_points_on_left_parallel(left_points, input_points, size, p1, p2);
-	// get_points_on_left_filter_parallel(left_points, input_points, size, p1, p2);
 
 	if(left_points.size() < 2){ // 0 or 1 points on left, then do combine step
 		if(left_points.size() == 1) {
@@ -152,9 +145,7 @@ void sub_hull_seq(Point ** input_points, int size, Point* p1, Point* p2, std::li
 }
 
 void sub_hull_par(int threads, Point ** input_points, int size, Point* p1, Point* p2, std::list<Point *> &convex_hull){
-	//std::cout << "size = " << size << std::endl;
 	std::vector<Point *> left_points;
-	//get_points_on_left_sequential(left_points, input_points, size, p1, p2);
 	get_points_on_left_parallel(left_points, input_points, size, p1, p2, threads);
 	// get_points_on_left_filter_parallel(left_points, input_points, size, p1, p2);
 
